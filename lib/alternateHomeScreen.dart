@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'accessWebData.dart';
+import 'accessRSSData.dart';
 import 'feedContent.dart';
 import 'newsArticles.dart';
 
@@ -13,7 +13,7 @@ class MyAlternateHomeScreen extends StatefulWidget {
 }
 
 class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
-  Future<List<FeedContent>> getContent(List<WebAccess> feedData) async {
+  Future<List<FeedContent>> getContent(List<WebRSSAccess> feedData) async {
 
     List<FeedContent> data = new List();
     for(var item in feedData){
@@ -24,7 +24,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
   }
 
 
-  Widget _createListView(BuildContext context, AsyncSnapshot snap, List<WebAccess> feedData){
+  Widget _createListView(BuildContext context, AsyncSnapshot snap, List<WebRSSAccess> feedData){
     List<FeedContent> data = snap.data;
 
     return new ListView.builder(
@@ -52,20 +52,19 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
 
     List<String> feedAddresses = [
       'http://feeds.reuters.com/Reuters/worldNews',
-      "http://feeds.bbci.co.uk/news/rss.xml",
+      "http://feeds.bbci.co.uk/news/world/rss.xml",
       "https://www.buzzfeed.com/world.xml",
       "http://www.spiegel.de/international/index.rss",
       "http://www.espn.com/espn/rss/news",
       "https://www.techradar.com/rss",
-
     ];
 
     List<String> xmlfeedAddress = ["http://www.looptt.com/rss.xml"];
 
-    List<WebAccess> feedData = new List();
+    List<WebRSSAccess> feedData = new List();
 
     for (var url in feedAddresses) {
-      feedData.add(WebAccess(url));
+      feedData.add(WebRSSAccess(url));
     }
 
     Widget _buildBottomLayout(Color color, IconData icon, String label){

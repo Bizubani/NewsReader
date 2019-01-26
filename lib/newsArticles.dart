@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'feedContent.dart';
-import 'package:read_2_me/accessWebData.dart';
+import 'package:read_2_me/accessRSSData.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -8,7 +8,7 @@ class NewsArticles extends StatefulWidget{
 
   NewsArticles({this.listing, this.newSite, this.count} );
 
-  final WebAccess listing;
+  final WebRSSAccess listing;
   final String newSite;
   final int count;
 
@@ -20,7 +20,7 @@ class NewsArticles extends StatefulWidget{
 class _NewsArticlesWidgetState extends State<NewsArticles>{
 
 
-  Future<List<FeedItems>> cycleItemList(WebAccess list) async {
+  Future<List<FeedItems>> cycleItemList(WebRSSAccess list) async {
       var unique = await list.makeItemContent();
       return unique;
   }
