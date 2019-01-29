@@ -4,22 +4,21 @@ import 'package:read_2_me/accessRSSData.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
-class NewsArticles extends StatefulWidget{
+class NewsArticlesScreen extends StatefulWidget{
 
-  NewsArticles({this.listing, this.newSite, this.count} );
+  NewsArticlesScreen({this.listing, this.newSite, this.count, this.shouldItRead} );
 
   final WebRSSAccess listing;
   final String newSite;
   final int count;
+  final bool shouldItRead;
 
   @override
   _NewsArticlesWidgetState createState() => _NewsArticlesWidgetState();
 }
 
 
-class _NewsArticlesWidgetState extends State<NewsArticles>{
-
-
+class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
   Future<List<FeedItems>> cycleItemList(WebRSSAccess list) async {
       var unique = await list.makeItemContent();
       return unique;
@@ -27,6 +26,7 @@ class _NewsArticlesWidgetState extends State<NewsArticles>{
   //Todo make this dependent on the users settings.
   bool isSpeaking = false; // flag if headlines are meant to be read.
   FlutterTts myVoiceOver = new FlutterTts();
+  //Todo: expand on this by having a variety of words for starting, ending and in-between
   List<String> transitionWords = ['First up ', 'Second', 'Next','Finally '];
 
   void _readHeadlines( int count) async{
@@ -39,7 +39,14 @@ class _NewsArticlesWidgetState extends State<NewsArticles>{
     }
     print(headlines);
     myVoiceOver.speak("These are the headlines from " + widget.newSite + "..."+ headlines);
+    // Todo: determine length of delay based on length of the string file.
+    var speakForThisLong = Duration(seconds: 15);
+    Future.delayed(speakForThisLong, _cancelSpeakingPriority);
 
+  }
+
+  Future<void> _cancelSpeakingPriority(){
+    isSpeaking = false;
   }
 
   void _speak(String headline, String description){
@@ -57,16 +64,12 @@ class _NewsArticlesWidgetState extends State<NewsArticles>{
     }
   }
 
-
   Future<bool> _stopSpeaking() async{
-     myVoiceOver.stop();
-
+      myVoiceOver.stop();
      if(isSpeaking == true){
       isSpeaking = false;
-
       return Future.value(false);
      }
-
      return true;
   }
 
@@ -74,8 +77,9 @@ class _NewsArticlesWidgetState extends State<NewsArticles>{
   @override
   Widget build(BuildContext context) {
 
-     _readHeadlines(3);
-
+    if(widget.shouldItRead) {
+      _readHeadlines(3);
+    }
     var height = MediaQuery.of(context).size.height;
 
     Widget _buildBottomLayout(Color color, IconData icon, String label){
@@ -163,15 +167,18 @@ class _NewsArticlesWidgetState extends State<NewsArticles>{
     return WillPopScope(
       onWillPop: _stopSpeaking,
       child: Scaffold(
-        body: Container(
-          color: Colors.grey,
-          child: Column(
-            children: <Widget>[
-              topTitle,
-              mainContent,
-              bottomLayout
-            ],
-          )
+        body: RefreshIndicator(
+          onRefresh: () => Future.delayed(Duration(seconds: 1)),
+          child: Container(
+            color: Colors.grey,
+            child: Column(
+              children: <Widget>[
+                topTitle,
+                mainContent,
+                bottomLayout
+              ],
+            )
+          ),
         ),
       ),
     );

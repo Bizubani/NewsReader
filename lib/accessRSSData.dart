@@ -2,7 +2,7 @@ import 'package:webfeed/webfeed.dart';
 import 'package:http/http.dart' as http;
 import 'feedContent.dart';
 import 'verifyDataIntergity.dart';
-import 'package:xml/xml.dart';
+
 
 // create a class to access a website to retrieve web data.
 class WebRSSAccess {
@@ -25,10 +25,7 @@ class WebRSSAccess {
        var rssItems = rssFeed.items;
        return rssItems;
     });
-
-
     return retrievedContent;
-
   }
 
   Future<RssFeed> provideRSSFeedInfo() {
@@ -40,15 +37,12 @@ class WebRSSAccess {
       return rssFeed;
     });
     return retrievedContent;
-
   }
-
 
   Future<FeedContent> makeFeedContent() async{
     var data = await provideRSSFeedInfo();
 
     return FeedContent(dataTester.parseNewsTitle(data.title), data.image.url, data.copyright);
-
   }
 
   Future<List<FeedItems>> makeItemContent() async{
@@ -60,4 +54,5 @@ class WebRSSAccess {
     }
     return feedItems;
   }
+
 }

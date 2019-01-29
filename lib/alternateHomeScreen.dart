@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'settingsScreen.dart';
 import 'accessRSSData.dart';
+import 'accessXMLData.dart';
 import 'feedContent.dart';
 import 'newsArticles.dart';
 
@@ -13,6 +15,8 @@ class MyAlternateHomeScreen extends StatefulWidget {
 }
 
 class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
+
+
   Future<List<FeedContent>> getContent(List<WebRSSAccess> feedData) async {
 
     List<FeedContent> data = new List();
@@ -23,31 +27,70 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
     return data;
   }
 
+  @override
+  void initState(){
+    super.initState();
+    _readHeadlines = true;
+  }
+
+  bool _readHeadlines;
+  WebXMLAccess test = new WebXMLAccess("http://www.looptt.com/rss.xml");
 
   Widget _createListView(BuildContext context, AsyncSnapshot snap, List<WebRSSAccess> feedData){
     List<FeedContent> data = snap.data;
-
     return new ListView.builder(
         itemCount: data.length,
         itemBuilder: (BuildContext context, int index){
         return Card(
-          child: ListTile(
-            title: Text(data[index].newSiteTitle, ),
-            subtitle: Text("Click for the news", ),
-            trailing: Image.network(data[index].imageUrl),
-            onTap: ()=> Navigator.push(
-                context, MaterialPageRoute(
-                builder: (context) =>
-                  NewsArticles(
-                    listing: feedData[index],
-                    newSite: data[index].newSiteTitle,)))
-        ));
+          child: Column(
+            children: <Widget>[
+              ListTile(
+                title: Text(data[index].newSiteTitle, ),
+                subtitle: Text("Click for the news", ),
+                trailing: Image.network(data[index].imageUrl),
+                onTap:  ()=> Navigator.push(
+                    context, MaterialPageRoute(
+                    builder: (context) =>
+                      NewsArticlesScreen(
+                        listing: feedData[index],
+                        newSite: data[index].newSiteTitle,
+                        shouldItRead: _readHeadlines,)))
+        ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+
+                  Text(" Click to enable sound ", style: TextStyle(color: Colors.black26, fontSize: 12.0, ), ),
+                  GestureDetector(
+                    onTap: () {
+                      if (_readHeadlines == true){
+                        _readHeadlines = false;
+                      }
+                      else {
+                        _readHeadlines = true;
+                      }
+                      print(_readHeadlines);
+                      setState((){});
+                    },
+                    child: _readHeadlines ? Icon(
+                      Icons.volume_up,
+                      color: Colors.red[500],
+                    ): Icon(
+                      Icons.volume_off,
+                      color: Colors.grey[600],
+                    ),
+                  )
+
+                ],
+              )
+            ],
+          ));
     });
   }
 
   @override
   Widget build(BuildContext context) {
-
+    SettingOverlay myOverlay = SettingOverlay(context);
     var height = MediaQuery.of(context).size.height;
 
     List<String> feedAddresses = [
@@ -61,35 +104,43 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
 
     List<String> xmlfeedAddress = ["http://www.looptt.com/rss.xml"];
 
-    List<WebRSSAccess> feedData = new List();
+    // Test function for the loopTT feed link.
+    Future<void> printTest() async{
+      var result = await  test.provideXMLContent();
+      print(result);
+    }
 
+    //printTest();
+
+    List<WebRSSAccess> feedData = new List();
     for (var url in feedAddresses) {
       feedData.add(WebRSSAccess(url));
     }
 
-    Widget _buildBottomLayout(Color color, IconData icon, String label){
-      return GestureDetector(
-        onTap: ()=> Navigator.push(
-          context, MaterialPageRoute(builder: (context) =>
-         new Scaffold())
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(icon, color: color),
-            Container(
-              margin: const EdgeInsets.only(top: 1.0),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12.0,
-                  color: color,
+
+    Widget _buildBottomLayout(Color color, IconData icon, String label, ){
+      return WillPopScope(
+        onWillPop: myOverlay.removeOverlay,
+        child: GestureDetector(
+          onTap: () => myOverlay.buildOverlay(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(icon, color: color),
+              Container(
+                margin: const EdgeInsets.only(top: 1.0),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12.0,
+                    color: color,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
 
+          ),
         ),
       );
     }
@@ -108,14 +159,15 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
       )
     );
     Widget bottomLayout = new Container(
+      //Todo change magic numbers
       height: height * 0.07,
       child: Row(
 
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
-          _buildBottomLayout( Colors.white,  Icons.list,  'User Menu' ),
-          _buildBottomLayout(Colors.white, Icons.add, 'Add new feed'),
-          _buildBottomLayout(Colors.white, Icons.settings, 'Settings')
+          _buildBottomLayout( Colors.white,  Icons.list,  'User Menu', ),
+          _buildBottomLayout(Colors.white, Icons.add, 'Add new feed', ),
+          _buildBottomLayout(Colors.white, Icons.settings, 'Settings',)
 
         ],
       ),

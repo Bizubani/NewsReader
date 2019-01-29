@@ -6,6 +6,7 @@ class FeedContent{
   final String newSiteTitle;
   final String imageUrl;
   final String copyright;
+
 }
 
 class FeedItems{
