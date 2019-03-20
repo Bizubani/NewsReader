@@ -42,7 +42,10 @@ class WebRSSAccess {
   Future<FeedContent> makeFeedContent() async{
     var data = await provideRSSFeedInfo();
 
-    return FeedContent(dataTester.parseNewsTitle(data.title), data.image.url, data.copyright);
+    var feed = FeedContent(dataTester.parseNewsTitle(data.title), data.image.url, data.copyright);
+
+
+    return feed;
   }
 
   Future<List<FeedItems>> makeItemContent() async{

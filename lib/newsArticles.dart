@@ -3,6 +3,9 @@ import 'feedContent.dart';
 import 'package:read_2_me/accessRSSData.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'loading_screen.dart';
+import 'webScrapper.dart';
+import 'settings.dart';
 
 class NewsArticlesScreen extends StatefulWidget{
 
@@ -23,22 +26,25 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
       var unique = await list.makeItemContent();
       return unique;
   }
+
+  WebScrapping myAccess = new WebScrapping();
   //Todo make this dependent on the users settings.
   bool isSpeaking = false; // flag if headlines are meant to be read.
   FlutterTts myVoiceOver = new FlutterTts();
   //Todo: expand on this by having a variety of words for starting, ending and in-between
   List<String> transitionWords = ['First up ', 'Second', 'Next','Finally '];
 
-  void _readHeadlines( int count) async{
+  void _readHeadlines() async{
     isSpeaking = true;
     var articles = await  cycleItemList(widget.listing);
+    int count = await Setting.getAmountOfHeadlines();
     String headlines = '';
     for( var i = 0; i <= count; i++ ){
       headlines += '... ' +transitionWords[i] + '... ';
       headlines += articles[i].headline + " ... ";
     }
     print(headlines);
-    myVoiceOver.speak("These are the headlines from " + widget.newSite + "..."+ headlines);
+    myVoiceOver.speak("These are the latest headlines from " + widget.newSite + "..."+ headlines);
     // Todo: determine length of delay based on length of the string file.
     var speakForThisLong = Duration(seconds: 15);
     Future.delayed(speakForThisLong, _cancelSpeakingPriority);
@@ -46,7 +52,9 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
   }
 
   Future<void> _cancelSpeakingPriority(){
+
     isSpeaking = false;
+
   }
 
   void _speak(String headline, String description){
@@ -78,7 +86,7 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
   Widget build(BuildContext context) {
 
     if(widget.shouldItRead) {
-      _readHeadlines(3);
+      _readHeadlines();
     }
     var height = MediaQuery.of(context).size.height;
 
@@ -149,17 +157,17 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
                         title: Text(headline, style: TextStyle(fontSize: 20.0)),
                         subtitle: Text(description),
                         onLongPress: () => _speak(headline, description),
-                        onTap: () => _launchURL(snapshot.data[index].linkToTheStory),
+                        onTap: () =>
+                           myAccess.getHttpBody(snapshot.data[index].linkToTheStory)
+                         //_launchURL(snapshot.data[index].linkToTheStory),
                       ),
                     );
                   });
             }
             else{
-              return Container(
-                child: Center(
-                  child: Text("Loading... " + " Please wait!"),
-                ),
-              );
+              return Scaffold(
+                  backgroundColor: Colors.white,
+                  body: new ColorLoader5());
             }
           }),
     );
@@ -168,7 +176,7 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
       onWillPop: _stopSpeaking,
       child: Scaffold(
         body: RefreshIndicator(
-          onRefresh: () => Future.delayed(Duration(seconds: 1)),
+          onRefresh: () => Future.delayed(Duration(seconds: 1)), // Todo Implement the refresh command
           child: Container(
             color: Colors.grey,
             child: Column(

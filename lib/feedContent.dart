@@ -1,12 +1,13 @@
 //Store Data acquired from the RSS Feed
 
-class FeedContent{
+class FeedContent {
 
-  FeedContent(this.newSiteTitle, this.imageUrl, this.copyright);
+  FeedContent(this.newSiteTitle, this.imageUrl, this.copyright,);
+
   final String newSiteTitle;
   final String imageUrl;
   final String copyright;
-
+  bool shouldHeadlinesBeRead = false;
 }
 
 class FeedItems{
