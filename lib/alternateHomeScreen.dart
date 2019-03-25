@@ -33,19 +33,18 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
       item.shouldHeadlinesBeRead = await Setting.getReadHeadlines(item.newSiteTitle);
     }
 
-    _listLayout = await Setting.getLayoutStyle();
-
     return data;
   }
 
 
 
   @override
-  void initState(){
+  void initState() {
+
     super.initState();
-
   }
-
+  List<String> feedAddresses = [];
+  List<WebRSSAccess> feedData = new List();
 
   WebXMLAccess test = new WebXMLAccess("http://www.looptt.com/rss.xml");
   bool _listLayout;
@@ -206,36 +205,38 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
         });
   }
 
+  Future<void> printTest() async{
+    var result = await  test.provideXMLContent();
+    print(result);
+  }
+
+
+  Future<List<FeedContent>> initialize()async{
+      feedAddresses = await Setting.getWebsites();
+      if (feedAddresses.isEmpty) {
+        print("string null");
+      } else {
+        for (var url in feedAddresses) {
+          feedData.add(WebRSSAccess(url));
+        }
+        _listLayout = await Setting.getLayoutStyle();
+        return getContent(feedData);
+      }
+  }
+
   @override
   Widget build(BuildContext context) {
 
     CustomOverlay myMainOverlay = CustomOverlay(context);
     var height = MediaQuery.of(context).size.height;
 
-    List<String> feedAddresses = [
-      'http://feeds.reuters.com/Reuters/worldNews',
-      "http://feeds.bbci.co.uk/news/world/rss.xml",
-      "https://www.buzzfeed.com/world.xml",
-      "http://www.spiegel.de/international/index.rss",
-      "http://www.espn.com/espn/rss/news",
-      "https://www.techradar.com/rss",
-    ];
+
 
     List<String> xmlfeedAddress = ["http://www.looptt.com/rss.xml"]; // Todo Decide what is to be done with this
 
     // Test function for the loopTT feed link.
-    Future<void> printTest() async{
-      var result = await  test.provideXMLContent();
-      print(result);
-    }
 
     //printTest();
-
-    List<WebRSSAccess> feedData = new List();
-    for (var url in feedAddresses) {
-      feedData.add(WebRSSAccess(url));
-    }
-
 
     Widget _buildBottomLayout(Color color, IconData icon, String label ){
       return GestureDetector(
@@ -298,7 +299,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
     Widget mainContent = new Container(
           height: height *0.90,
           child: FutureBuilder(
-              future: getContent(feedData),
+              future: feedAddresses.isEmpty ? initialize(): getContent(feedData),
               builder: (BuildContext context, AsyncSnapshot snap){
                 if(snap.hasData){
                   return _listLayout ? _createListView(context, snap, feedData):_createGridView(context, snap, feedData); // decide what layout to use based on user preferences
