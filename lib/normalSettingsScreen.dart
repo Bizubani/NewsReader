@@ -49,7 +49,7 @@ class _NormalSettingsState extends State<NormalSettings>{
                   )
                 ],
               ),
-              Text('We current read $currentHeadlineCount stories set to read'),
+              Text('We currentlhy have $currentHeadlineCount stories set to read'),
               Row(
                 children: <Widget>[
                   Text('Change amount'),

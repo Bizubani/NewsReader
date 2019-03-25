@@ -32,7 +32,7 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
   bool isSpeaking = false; // flag if headlines are meant to be read.
   FlutterTts myVoiceOver = new FlutterTts();
   //Todo: expand on this by having a variety of words for starting, ending and in-between
-  List<String> transitionWords = ['First up ', 'Second', 'Next','Finally '];
+  List<String> transitionWords = ['First up ', 'Second', 'Next','','Finally ', ' ', ''];
 
   void _readHeadlines() async{
     isSpeaking = true;

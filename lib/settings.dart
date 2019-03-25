@@ -8,6 +8,7 @@ class Setting{
   static final String _amountOfHeadlines = 'AmountOfHeadlines';
   static final String _getNotified = 'GetNotified';
   static final String _layoutStyle = 'LayoutStyle';
+  static final String _websites = 'Websites';
 
   static Future<bool> setReadSpeed(double readSpeed) async{
     final prefs = await SharedPreferences.getInstance(); 
@@ -26,7 +27,7 @@ class Setting{
 
   static Future<int> getAmountOfHeadlines() async{
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_amountOfHeadlines) ?? 4; // have a returnable default amount
+    return prefs.getInt(_amountOfHeadlines) ?? 5; // have a returnable default amount
   }//end of getAmountOfHeadlines
 
   static Future<bool> setGetNotified(bool notify) async{
@@ -58,5 +59,22 @@ class Setting{
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(newSiteTitle) ?? true; // have a returnable default amount
   } //end of getReadHeadlines
+
+  static Future<bool> setWebsites(List<String> listOfSites) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_websites, listOfSites);
+  } // end of setWebsites.
+
+  static Future<List<String>> getWebsites() async{
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_websites)  ?? [ //return default string list in case
+      'http://feeds.reuters.com/Reuters/worldNews',
+      "http://feeds.bbci.co.uk/news/world/rss.xml",
+      "https://www.buzzfeed.com/world.xml",
+      "http://www.spiegel.de/international/index.rss",
+      "http://www.espn.com/espn/rss/news",
+      "https://www.techradar.com/rss",
+    ];
+  }// end of getWebsites
 
 }//end of Settings class
