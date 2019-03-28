@@ -74,6 +74,7 @@ class Setting{
       "http://www.spiegel.de/international/index.rss",
       "http://www.espn.com/espn/rss/news",
       "https://www.techradar.com/rss",
+     "http://feeds.bbci.co.uk/news/rss.xml",
     ];
   }// end of getWebsites
 

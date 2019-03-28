@@ -5,7 +5,7 @@ class FeedContent {
   FeedContent(this.newSiteTitle, this.imageUrl, this.copyright,);
 
   final String newSiteTitle;
-  final String imageUrl;
+  String imageUrl;
   final String copyright;
   bool shouldHeadlinesBeRead = false;
 }
