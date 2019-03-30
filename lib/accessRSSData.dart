@@ -38,6 +38,7 @@ class WebRSSAccess {
       return rssFeed;
     });
     return retrievedContent;
+
   }
 // populates and returns a FeedContent object that stores the particulars of the feed
   Future<FeedContent> makeFeedContent() async{

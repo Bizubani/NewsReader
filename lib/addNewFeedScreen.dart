@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:read_2_me/verifyWebFeed.dart';
+import 'utilityClasses.dart';
+
 class AddFeed extends StatefulWidget{
   @override
   _AddFeedState createState() => _AddFeedState();
@@ -8,13 +10,26 @@ class AddFeed extends StatefulWidget{
 class _AddFeedState extends State <AddFeed>{
 
   final TextEditingController myTextControl = new TextEditingController();
-  String value = '';
+  NewFeed myTestFeed = new NewFeed();
 
 
   @override
   void dispose(){
     super.dispose();
     myTextControl.dispose();
+  }
+
+  Future<void> waitForResult() async{
+    FeedVerification test = new FeedVerification(myTestFeed.value);
+    myTestFeed.result = await test.verifyFeed();
+    informAndClose();
+  }
+
+  void informAndClose(){
+    print('In inform and Close');
+    print(myTestFeed.result);
+    print(myTestFeed.value);
+    Navigator.pop(context, myTestFeed);
   }
 
   @override
@@ -35,9 +50,8 @@ class _AddFeedState extends State <AddFeed>{
                   child: TextField(
                     controller: myTextControl,
                     onSubmitted: (text) {
-                      value = text;
-                      FeedVerification test = new FeedVerification(value);
-                      var result = test.verifyFeed();
+                      myTestFeed.value = text;
+                      waitForResult();
                     },
                     decoration: InputDecoration(
                         border: InputBorder.none,
@@ -54,3 +68,4 @@ class _AddFeedState extends State <AddFeed>{
     );
   }
 }
+

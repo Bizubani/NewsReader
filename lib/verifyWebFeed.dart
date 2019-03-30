@@ -19,16 +19,11 @@ class FeedVerification {
   Future<void> getFeed(String testThis) async{
     WebRSSAccess source =  WebRSSAccess(testThis);
     FeedContent content = await source.makeFeedContent();
-    print('in get feed');
-    print(content.newSiteTitle);
-    print(content.imageUrl);
-    print('still in get feed');
+
     // assign the two test items to class members to be checked.
     _newsTitle = content.newSiteTitle;
     _imageURL = content.imageUrl;
-    print('In get feed');
-    print('$_newsTitle   $_imageURL');
-    print('End of get feed');
+
   }
 
   // utility functions
@@ -44,8 +39,11 @@ class FeedVerification {
       else
         print(_newsTitle);
         print(_imageURL);
+        print('3');
         return 3; // Feed is valid.
   }
 
 }
+
+
 

@@ -8,6 +8,7 @@ import 'newsArticles.dart';
 import 'normalSettingsScreen.dart';
 import 'loading_screen.dart';
 import 'addNewFeedScreen.dart';
+import 'utilityClasses.dart';
 
 class MyAlternateHomeScreen extends StatefulWidget {
   MyAlternateHomeScreen({Key key, this.title}) : super(key: key);
@@ -36,7 +37,34 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
     return data;
   }
 
+  NewFeed myTestFeed = new NewFeed();
 
+   navigateToAddFeed(BuildContext context) async{
+
+   var result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context)=> AddFeed()));
+
+   print(feedAddresses);
+  setState(() {
+    determineIfToAddFeed(result);
+  });
+  print(feedAddresses);
+  }
+
+  void determineIfToAddFeed(var result){
+    myTestFeed = result;
+    // if the feed is valid
+    if(myTestFeed.result == 3){
+      // and the feed has not yet been added
+      if(!feedAddresses.contains(myTestFeed.value)){
+        feedAddresses.add(myTestFeed.value); // add the feed and update the shared preferences
+        Setting.setWebsites(feedAddresses);
+      }
+    }else{
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text("unable to add $myTestFeed.value")));
+    }
+  }
 
   @override
   void initState() {
@@ -240,16 +268,13 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
 
     Widget _buildBottomLayout(Color color, IconData icon, String label ){
       return GestureDetector(
-        onTap: () => Navigator.push(context, MaterialPageRoute(
-          builder: (context){
-            if (label == 'Settings')
-              {
-               return NormalSettings();
-              }else{
-              return AddFeed();
-            }
+        onTap:() {
+          if (label == 'Settings'){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => NormalSettings()));
+          } else{
+            navigateToAddFeed(context);
           }
-        )),
+        },
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -328,3 +353,5 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
     );
   }
 }
+
+
