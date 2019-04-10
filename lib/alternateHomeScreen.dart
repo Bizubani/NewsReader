@@ -7,6 +7,7 @@ import 'feedContent.dart';
 import 'newsArticles.dart';
 import 'normalSettingsScreen.dart';
 import 'loading_screen.dart';
+import 'dart:ui';
 import 'addNewFeedScreen.dart';
 import 'utilityClasses.dart';
 
@@ -86,20 +87,20 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
           String title = data[index].newSiteTitle;
           bool _readHeadlines = data[index].shouldHeadlinesBeRead;
         return Card(
-          color: Colors.transparent,
+          color: Colors.black26,
           child: Stack(
               children:<Widget>[
               Center(
               child: Container(
-                alignment: Alignment.bottomCenter,
-                child: Image.network( data[index].imageUrl,fit:BoxFit.fill ,)
+                alignment: Alignment.topRight,
+                child: data[index].imageUrl == null? Icon(Icons.aspect_ratio): Image.network( data[index].imageUrl,height: 60.0, width: 80.0 ,) // if there is no associated  image,
               )
               ),
               Column(
               children: <Widget>[
                 ListTile(
-                  title: Text(title,),
-                  subtitle: Text("Click for the news", ),
+                  title: Text(title, style: TextStyle(color: Colors.white,  )),
+                  subtitle: Text("Click tile for the news", style: TextStyle(color: Colors.white, fontSize: 12.0, ) ),
                   //trailing: Image.network(data[index].imageUrl, height: 75, width: 200,), // Todo remove magic numbers
 
                   // launch detailed news feed listing when a source is selected.
@@ -115,8 +116,8 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
                     // check the state of the readHeadlines variable and determine what should be displayed.
-                    _readHeadlines ? Text(" Click to disable sound ", style: TextStyle(color: Colors.black26, fontSize: 12.0, ), ):
-                    Text(" Click to enable sound ", style: TextStyle(color: Colors.black26, fontSize: 12.0, ), ),
+                    _readHeadlines ? Text(" Click to disable feed sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ):
+                    Text(" Click to enable feed sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ),
                     GestureDetector(
                       onTap: () {
                         // when a tap is detected, toggle sound on or off as necessary
@@ -135,12 +136,12 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
                         print(_readHeadlines);
 
                       },
-                      child: _readHeadlines ? Icon(
-                        Icons.volume_up,
-                        color: Colors.red[500],
-                      ): Icon(
-                        Icons.volume_off,
-                        color: Colors.white,
+                      child: _readHeadlines ? Image(
+                        image: AssetImage("assets/read.png"),
+                        //color: Colors.red,
+                      ): Image(
+                        image: AssetImage("assets/dontread.png"),
+                        //color: Colors.white,
                       ),
                     )
 
@@ -162,7 +163,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
           String title = data[index].newSiteTitle;
           bool _readHeadlines = data[index].shouldHeadlinesBeRead;
           return Card(
-              color: Colors.transparent,
+              color: Colors.blueGrey,
 
               child: Stack(
 
@@ -321,35 +322,57 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
         ],
       ),
     );
-    Widget mainContent = new Container(
-          height: height *0.90,
+
+
+
+    Widget loadingScreen = new Container(
           child: FutureBuilder(
               future: feedAddresses.isEmpty ? initialize(): getContent(feedData),
               builder: (BuildContext context, AsyncSnapshot snap){
                 if(snap.hasData){
-                  return _listLayout ? _createListView(context, snap, feedData):_createGridView(context, snap, feedData); // decide what layout to use based on user preferences
+                  return Column
+                    (children: <Widget>[
+                  topTitle,
+                  new Container(
+                      height: height *0.90,
+                      child: _listLayout ? _createListView(context, snap, feedData):_createGridView(context, snap, feedData) // decide what layout to use based on user preferences
+                  ),
+                  bottomLayout]); // decide what layout to use based on user preferences
                 }
                 else{
                   return Scaffold(
-                      backgroundColor: Colors.white,
-                      body: new ColorLoader5());
+                      body: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: AssetImage("assets/loadingbackground.jpg"),
+                          fit: BoxFit.cover,
+                        ),
+
+                      ),
+                  )
+                  );
                 }
               }),
-        
-
     );
 
+
+
     return Scaffold(
-      body: Container(
-        color: Colors.grey,
-        child: Column(
-          children: <Widget>[
-            topTitle,
-            mainContent,
-            bottomLayout,
-          ],
-        )
-      ),
+      body: RefreshIndicator(
+          onRefresh: () => Future.delayed(Duration(seconds: 1)),
+        child: Container(
+          decoration: BoxDecoration(
+            image: new DecorationImage(
+                image: new AssetImage("assets/mainback.jpg"),
+              fit: BoxFit.cover
+            )
+          ),
+          child: new BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+              child: loadingScreen,
+          )
+        ),
+      )
     );
   }
 }

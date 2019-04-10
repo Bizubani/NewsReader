@@ -24,7 +24,7 @@ class TestData{
     if(check.contains('<')) {
       int stop = check.indexOf('<', 1);
       int start = 4; // this is the position that i know is after the garbage to start.
-      check = check.substring(start, stop);
+      //check = check.substring(start, stop);
     }
     return check;
   }

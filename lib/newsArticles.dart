@@ -42,7 +42,9 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
     for( var i = 0; i <= count; i++ ){
       headlines += '... ' +transitionWords[i] + '... ';
       headlines += articles[i].headline + " ... ";
+      //print(articles[i].storyMedia.title.toString());
     }
+
     print(headlines);
     myVoiceOver.speak("These are the latest headlines from " + widget.newSite + "..."+ headlines);
     // Todo: determine length of delay based on length of the string file.
@@ -140,34 +142,61 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
         ],
       ),
     );
-    Widget mainContent = new Container(
-      height: height * 0.9,
+
+
+    Widget loadingScreen = new Container(
+
       child: FutureBuilder(
           future : cycleItemList(widget.listing),
           builder: (BuildContext context, AsyncSnapshot snapshot){
             if(snapshot.hasData){
-              return ListView.builder(
-
-                  itemCount: snapshot.data.length,
-                  itemBuilder: (BuildContext context, int index){
-                    var headline = snapshot.data[index].headline ;
-                    var description = snapshot.data[index].description ;
-                    return Card(
-                      child: ListTile(
-                        title: Text(headline, style: TextStyle(fontSize: 20.0)),
-                        subtitle: Text(description),
-                        onLongPress: () => _speak(headline, description),
-                        onTap: () =>
-                           myAccess.getHttpBody(snapshot.data[index].linkToTheStory)
-                         //_launchURL(snapshot.data[index].linkToTheStory),
-                      ),
-                    );
-                  });
+              return Column(
+                children: <Widget>[
+                  topTitle,
+                Container(
+                  height: height * 0.97,
+                  child: ListView.builder(
+                      itemCount: snapshot.data.length,
+                      itemBuilder: (BuildContext context, int index){
+                        var headline = snapshot.data[index].headline ;
+                        var description = snapshot.data[index].description ;
+                        var pubDate = snapshot.data[index].pubDate;
+                       // var pubTime = DateTime.parse(pubDate);
+                        return Column(
+                          children: <Widget>[
+                            ListTile(
+                                title: Text(headline, style: TextStyle(color: Colors.white,fontSize: 18.0)),
+                                subtitle: Text(description, style: TextStyle(color: Colors.white, fontSize: 14.0),),
+                                onLongPress: () => _speak(headline, description),
+                                onTap: () =>
+                                    myAccess.getHttpBody(snapshot.data[index].linkToTheStory)
+                              //_launchURL(snapshot.data[index].linkToTheStory),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: <Widget>[
+                                Text(pubDate , style: TextStyle(fontSize: 14.0),),
+                                Text("Test 1")
+                              ],
+                            )
+                          ],
+                        );
+                      }),
+                ),
+                 // bottomLayout
+                ],
+              );
             }
             else{
               return Scaffold(
-                  backgroundColor: Colors.white,
-                  body: new ColorLoader5());
+                  body: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                          image: AssetImage("assets/loadingbackground.jpg"),
+                      fit: BoxFit.cover)
+                    ),
+                  )
+              );
             }
           }),
     );
@@ -178,14 +207,12 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
         body: RefreshIndicator(
           onRefresh: () => Future.delayed(Duration(seconds: 1)), // Todo Implement the refresh command
           child: Container(
-            color: Colors.grey,
-            child: Column(
-              children: <Widget>[
-                topTitle,
-                mainContent,
-                bottomLayout
-              ],
-            )
+            decoration: BoxDecoration(
+              image: DecorationImage(
+              image: AssetImage("assets/background.png"),
+              fit: BoxFit.cover)
+            ),
+            child: loadingScreen
           ),
         ),
       ),

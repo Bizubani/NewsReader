@@ -26,9 +26,6 @@ class _AddFeedState extends State <AddFeed>{
   }
 
   void informAndClose(){
-    print('In inform and Close');
-    print(myTestFeed.result);
-    print(myTestFeed.value);
     Navigator.pop(context, myTestFeed);
   }
 
@@ -58,7 +55,6 @@ class _AddFeedState extends State <AddFeed>{
                         hintText: "Enter Website"
                     ),
 
-                    autofocus: true,
                   ),
                 ),
               ],

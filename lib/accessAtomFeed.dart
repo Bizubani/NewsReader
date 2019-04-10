@@ -1,55 +1,55 @@
 import 'package:webfeed/webfeed.dart';
 import 'package:http/http.dart' as http;
-import 'feedContent.dart';
+import 'atomContent.dart';
 import 'verifyDataIntergity.dart';
 
 
 // Class that takes a web address and gets the web feed associated with it.
 // Also runs some data verification using the class verifyDataIntegrity.
-class WebRSSAccess {
+class AtomAccess {
 
   // assign the url string to the web address variable.
-  WebRSSAccess(String webAddress){
+  AtomAccess(String webAddress){
     this.webAddress = webAddress;
   }
   TestData dataTester = new TestData();
   String webAddress;
   var client = new http.Client();
+
 // function that gets the actual items associated with the feed.
-  Future<List<RssItem>> provideRSSItems() {
-  // attempt to contact webaddress
+  Future<List<AtomItem>> provideAtomItems() {
+    // attempt to contact webaddress
     var retrievedContent = client.get(webAddress).then((response) {
       return response.body;
-     }).then((body){
+    }).then((body){
 
-       var rssFeed = new RssFeed.parse(body);
-       var rssItems = rssFeed.items;
-       return rssItems;
+      var atomFeed = new AtomFeed.parse(body);
+      var atomItems = atomFeed.items;
+      return atomItems;
     });
     return retrievedContent;
   }
 //function that retrieves the main feed data
-  Future<RssFeed> provideRSSFeedInfo() {
+  Future<AtomFeed> provideAtomFeedInfo() {
 
     var retrievedContent = client.get(webAddress).then((response) {
       return response.body;
     }).then((body){
-      var rssFeed = new RssFeed.parse(body);
-      return rssFeed;
+      var atomFeed = new AtomFeed.parse(body);
+      return atomFeed;
     });
     return retrievedContent;
 
   }
 // populates and returns a FeedContent object that stores the particulars of the feed
-  Future<FeedContent> makeFeedContent() async{
-    var data = await provideRSSFeedInfo();
+  Future<AtomFeedContent> makeFeedContent() async{
+    var data = await provideAtomFeedInfo();
     var feed;
     try{
-       feed = FeedContent(dataTester.parseNewsTitle(data.title),data.image.url, data.copyright);
+      feed = AtomFeedContent(data.title, data.id, data.icon, data.logo, data.rights, data.updated);
     }
     on NoSuchMethodError {
-       feed = FeedContent(
-          dataTester.parseNewsTitle(data.title), null, data.copyright);
+      feed = AtomFeedContent(data.title, data.id, data.icon, data.logo, data.rights, data.updated);
     }
     catch (e){
       print("Ran in to problem $e");
@@ -58,19 +58,19 @@ class WebRSSAccess {
     return feed;
   }
 // populates and returns in list form, the series of items associated with the feed.
-  Future<List<FeedItems>> makeItemContent() async{
-    var data = await provideRSSItems();
-    List<FeedItems> feedItems = new List();
+  Future<List<AtomItems>> makeItemContent() async{
+    var data = await provideAtomItems();
+    List<AtomItems> atomItems = new List();
 
     for(var element in data){
       try{
-      print(element.media.thumbnails);}
+        print(element.media.thumbnails);}
       catch (e){
         print('Unable to print, error $e');
       }
-      feedItems.add(new FeedItems(element.title, dataTester.parseGibberish(element.description) , element.link, element.content, element.media, element.pubDate));
+      atomItems.add(new AtomItems(element.title, element.id, element.content, element.media, element.updated, element.published));
     }
-    return feedItems;
+    return atomItems;
   }
 
 }
