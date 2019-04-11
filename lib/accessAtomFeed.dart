@@ -64,7 +64,7 @@ class AtomAccess {
 
     for(var element in data){
       try{
-        print(element.media.thumbnails);}
+        print(element.media.thumbnails.length);}
       catch (e){
         print('Unable to print, error $e');
       }

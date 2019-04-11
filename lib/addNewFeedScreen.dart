@@ -47,6 +47,12 @@ class _AddFeedState extends State <AddFeed>{
                   child: TextField(
                     controller: myTextControl,
                     onSubmitted: (text) {
+                      print("before correction $text");
+                      if(!text.contains("http")){ // if the text is improperly formatted, fix
+                        text = text.trim();
+                        text = "http://" + text;
+                        print("after correction $text");
+                      }
                       myTestFeed.value = text;
                       waitForResult();
                     },

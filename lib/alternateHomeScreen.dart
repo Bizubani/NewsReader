@@ -38,6 +38,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
     return data;
   }
 
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   NewFeed myTestFeed = new NewFeed();
 
    navigateToAddFeed(BuildContext context) async{
@@ -47,7 +48,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
       MaterialPageRoute(builder: (context)=> AddFeed()));
 
    print(feedAddresses);
-  setState(() {
+    setState(() {
     determineIfToAddFeed(result);
   });
   print(feedAddresses);
@@ -55,15 +56,17 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
 
   void determineIfToAddFeed(var result){
     myTestFeed = result;
+    print(myTestFeed.result);
     // if the feed is valid
     if(myTestFeed.result == 3){
       // and the feed has not yet been added
       if(!feedAddresses.contains(myTestFeed.value)){
         feedAddresses.add(myTestFeed.value); // add the feed and update the shared preferences
         Setting.setWebsites(feedAddresses);
+        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(" ${myTestFeed.value} added to feed list")));
       }
     }else{
-      Scaffold.of(context).showSnackBar(SnackBar(content: Text("unable to add $myTestFeed.value")));
+      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("unable to add ${myTestFeed.value} to feed list. Invalid URL")));
     }
   }
 
@@ -93,7 +96,10 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
               Center(
               child: Container(
                 alignment: Alignment.topRight,
-                child: data[index].imageUrl == null? Icon(Icons.aspect_ratio): Image.network( data[index].imageUrl,height: 60.0, width: 80.0 ,) // if there is no associated  image,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: data[index].imageUrl == null? Icon(Icons.aspect_ratio): Image.network( data[index].imageUrl,height: 60.0, width: 80.0 ,),
+                ) // if there is no associated  image,
               )
               ),
               Column(
@@ -101,7 +107,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
                 ListTile(
                   title: Text(title, style: TextStyle(color: Colors.white,  )),
                   subtitle: Text("Click tile for the news", style: TextStyle(color: Colors.white, fontSize: 12.0, ) ),
-                  //trailing: Image.network(data[index].imageUrl, height: 75, width: 200,), // Todo remove magic numbers
+
 
                   // launch detailed news feed listing when a source is selected.
                   onTap:  ()=> Navigator.push(
@@ -138,9 +144,13 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
                       },
                       child: _readHeadlines ? Image(
                         image: AssetImage("assets/read.png"),
+                        height: 20.0,
+                        width: 20.0,
                         //color: Colors.red,
                       ): Image(
                         image: AssetImage("assets/dontread.png"),
+                        height: 20.0,
+                        width: 20.0,
                         //color: Colors.white,
                       ),
                     )
@@ -163,26 +173,23 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
           String title = data[index].newSiteTitle;
           bool _readHeadlines = data[index].shouldHeadlinesBeRead;
           return Card(
-              color: Colors.blueGrey,
-
+              color: Colors.black26,
               child: Stack(
-
                   children:<Widget>[
                     Center(
                         child: Container(
-
                             alignment: Alignment.bottomCenter,
-
-                            child: Image.network( data[index].imageUrl,fit:BoxFit.fill ,)
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: data[index].imageUrl == null? Icon(Icons.aspect_ratio): Image.network( data[index].imageUrl,height: 60.0, width: 80.0 ,),
+                            ) // if there i
                         )
                     ),
                     Column(
                       children: <Widget>[
                         ListTile(
-
-                            title: Text(title,),
-                            subtitle: Text("Click for the news", ),
-                            //trailing: Image.network(data[index].imageUrl, height: 75, width: 200,), // Todo remove magic numbers
+                            title: Text(title, style: TextStyle(color: Colors.white),),
+                            subtitle: Text("Click for the news", style: TextStyle(color: Colors.white), ),
 
                             // launch detailed news feed listing when a source is selected.
                             onTap:  ()=> Navigator.push(
@@ -197,8 +204,8 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: <Widget>[
                             // check the state of the readHeadlines variable and determine what should be displayed.
-                            _readHeadlines ? Text(" Click to disable sound ", style: TextStyle(color: Colors.black26, fontSize: 12.0, ), ):
-                            Text(" Click to enable sound ", style: TextStyle(color: Colors.black26, fontSize: 12.0, ), ),
+                            _readHeadlines ? Text(" Click to disable sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ):
+                            Text(" Click to enable sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ),
                             GestureDetector(
                               onTap: () {
                                 // when a tap is detected, toggle sound on or off as necessary
@@ -217,12 +224,16 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
                                 print(_readHeadlines);
 
                               },
-                              child: _readHeadlines ? Icon(
-                                Icons.volume_up,
-                                color: Colors.red[500],
-                              ): Icon(
-                                Icons.volume_off,
-                                color: Colors.white,
+                              child: _readHeadlines ? Image(
+                                image: AssetImage("assets/read.png"),
+                                height: 20.0,
+                                width: 20.0,
+                                //color: Colors.red,
+                              ): Image(
+                                image: AssetImage("assets/dontread.png"),
+                                height: 20.0,
+                                width: 20.0,
+                                //color: Colors.white,
                               ),
                             )
 
@@ -280,13 +291,17 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Icon(icon, color: color),
+            Icon(
+                icon,
+                color: color,
+                size: 30.0,
+            ),
             Container(
               margin: const EdgeInsets.only(top: 1.0),
               child: Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12.0,
+                  fontSize: 10.0,
                   color: color,
                 ),
               ),
@@ -325,7 +340,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
 
 
 
-    Widget loadingScreen = new Container(
+    Widget loadingScreen = Container(
           child: FutureBuilder(
               future: feedAddresses.isEmpty ? initialize(): getContent(feedData),
               builder: (BuildContext context, AsyncSnapshot snap){
@@ -344,7 +359,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
                       body: Container(
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                            image: AssetImage("assets/loadingbackground.jpg"),
+                            image: AssetImage("assets/loadingbackground.jpg",),
                           fit: BoxFit.cover,
                         ),
 
@@ -358,6 +373,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
 
 
     return Scaffold(
+      key: _scaffoldKey,
       body: RefreshIndicator(
           onRefresh: () => Future.delayed(Duration(seconds: 1)),
         child: Container(

@@ -1,4 +1,3 @@
-import 'accessXMLData.dart';
 import 'accessRSSData.dart';
 import 'feedContent.dart';
 
@@ -29,9 +28,14 @@ class FeedVerification {
   // utility functions
   Future<int> verifyFeed() async{ // will be used to test the member variables
 
-    await getFeed(_verifyFeed);
+    try{
+      await getFeed(_verifyFeed);
+    }
+    catch(e){
+      return 2; // if getFeed failed, flag feed as invalid
+    }
     // TODO devise a good test for the string
-      if(_newsTitle.length < 3 || _newsTitle.length > 25){
+      if(_newsTitle.length < 3 || _newsTitle.length > 35){
         print(_newsTitle);
         print(_imageURL);
         return 1; // Feed is not valid

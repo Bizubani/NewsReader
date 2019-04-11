@@ -3,7 +3,7 @@ import 'feedContent.dart';
 import 'package:read_2_me/accessRSSData.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'loading_screen.dart';
+import 'dart:math';
 import 'webScrapper.dart';
 import 'settings.dart';
 
@@ -32,17 +32,57 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
   bool isSpeaking = false; // flag if headlines are meant to be read.
   FlutterTts myVoiceOver = new FlutterTts();
   //Todo: expand on this by having a variety of words for starting, ending and in-between
-  List<String> transitionWords = ['First up ', 'Second', 'Next','','Finally ', ' ', ''];
+  List<String> transitionWords = ['Next ', 'Next up ', 'Continuing ', 'Among the other top stories ', 'Also ' ];
+  List<String> openingWords = ['First up today ', 'The top story is ', 'First up ', 'We begin with '];
+  List<String> lastWords = ['Finally ', 'Finally today ', 'Your final headline is ', 'Lastly '];
+
+  List<int> _chooseWords(int length){
+    int i = 0;
+    int randInt;
+    var random = new Random();
+    List<int> myList = new List(length);
+    while(i < length){
+      randInt = random.nextInt(length);
+      if(!myList.contains(randInt)){
+        myList[i++] = randInt;
+      }
+    }
+    return myList;
+  }
+
+  int _getRandomNumber(int length){
+    var random = new Random();
+    int myInt = random.nextInt(length);
+    return myInt;
+  }
 
   void _readHeadlines() async{
+    String headlines = '';
     isSpeaking = true;
     var articles = await  cycleItemList(widget.listing);
     int count = await Setting.getAmountOfHeadlines();
-    String headlines = '';
-    for( var i = 0; i <= count; i++ ){
-      headlines += '... ' +transitionWords[i] + '... ';
-      headlines += articles[i].headline + " ... ";
-      //print(articles[i].storyMedia.title.toString());
+    int openingLength = openingWords.length;
+    int lastLength = lastWords.length;
+    int transitionLength = transitionWords.length;
+    List<int> randomOrder = _chooseWords(transitionLength);
+    int randomStart = _getRandomNumber(openingLength);
+    int randomEnd = _getRandomNumber(lastLength);
+
+    for( var i = 0, j = 0; j <= count; j++ ){
+      if(j == 0){ // if this is the first headline being generated to the headline list, choose from the opening words
+        headlines += '... ' + openingWords[randomStart] + '... ';
+      }
+      else if(j == count ){ // if this is the last headline being added, put in a random closing word
+        headlines += '... ' + lastWords[randomEnd] + '... ';
+      }
+      else{ // else choose from the transitional words
+        headlines += '... ' + transitionWords[randomOrder[i++]] + '... ';
+      }
+
+      headlines += articles[j].headline + " ... ";
+      if( i >= transitionLength ){ // if we need to, restart with the same random order
+        i = 0; // set it to restart at zero
+      }
     }
 
     print(headlines);
@@ -161,22 +201,27 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
                         var headline = snapshot.data[index].headline ;
                         var description = snapshot.data[index].description ;
                         var pubDate = snapshot.data[index].pubDate;
+                        var author = snapshot.data[index].author;
                        // var pubTime = DateTime.parse(pubDate);
                         return Column(
                           children: <Widget>[
                             ListTile(
                                 title: Text(headline, style: TextStyle(color: Colors.white,fontSize: 18.0)),
-                                subtitle: Text(description, style: TextStyle(color: Colors.white, fontSize: 14.0),),
+                                subtitle: Text(description, style: TextStyle(color: Colors.white, fontSize: 12.0),),
                                 onLongPress: () => _speak(headline, description),
                                 onTap: () =>
                                     myAccess.getHttpBody(snapshot.data[index].linkToTheStory)
                               //_launchURL(snapshot.data[index].linkToTheStory),
                             ),
+                            Image(
+                              image: NetworkImage(snapshot.data[index].itemImageURL),
+                            ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+
                               children: <Widget>[
-                                Text(pubDate , style: TextStyle(fontSize: 14.0),),
-                                Text("Test 1")
+                                Text(pubDate, style: TextStyle(fontSize: 12.0),),
+                                Text(author, style: TextStyle(fontSize: 12.0))
                               ],
                             )
                           ],

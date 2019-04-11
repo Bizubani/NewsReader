@@ -13,14 +13,15 @@ class FeedContent {
 
 class FeedItems{
 
-  FeedItems(this.headline, this.description, this.linkToTheStory, this.storyImage, this.storyMedia, this.pubDate);
+  FeedItems(this.headline, this.description, this.linkToTheStory, this.storyImage, this.itemImageURL, this.pubDate, this.author);
 
   final String headline;
   String description;
   final String linkToTheStory;
   final RssContent storyImage;
-  final Media storyMedia;
+  final String itemImageURL;
   final String pubDate;
+  final String author;
 
 
 

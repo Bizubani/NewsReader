@@ -12,6 +12,45 @@ class WebRSSAccess {
   WebRSSAccess(String webAddress){
     this.webAddress = webAddress;
   }
+
+  //attempt to find images attached to stories
+  String findImageIfAvailable(RssItem item){
+    String imageUrl = "";
+    try{
+      imageUrl = item.media.thumbnails[0].url;
+    }
+    catch(e){}
+    try{
+      imageUrl = item.media.contents[0].url;
+    }
+    catch (e){}
+    String searchString = item.description;
+    int start = searchString.indexOf("<img src");
+    if(start > 0){
+      int beginning = searchString.indexOf("\"", start);
+      int end = searchString.indexOf("\"", beginning+1); // begin after the first quotation mark
+      imageUrl = searchString.substring(beginning+1, end);
+      if(imageUrl.contains("feedburner")){
+        imageUrl = "";
+      }
+    }
+    print("Image link: $imageUrl");
+    return imageUrl;
+  }
+  //Test the name attribute from the feed items and return and empty string if none was provided
+  String testAuthorName(RssItem item){
+    String goodValue = "";
+    if(item.author == null){
+    } else {
+      goodValue = item.author;
+    }
+    return goodValue;
+  }
+
+  String testDateFormat(String test){
+
+  }
+
   TestData dataTester = new TestData();
   String webAddress;
   var client = new http.Client();
@@ -57,18 +96,15 @@ class WebRSSAccess {
 
     return feed;
   }
+
 // populates and returns in list form, the series of items associated with the feed.
   Future<List<FeedItems>> makeItemContent() async{
     var data = await provideRSSItems();
     List<FeedItems> feedItems = new List();
-
+    String imageUrl = " ";
     for(var element in data){
-      try{
-      print(element.media.thumbnails);}
-      catch (e){
-        print('Unable to print, error $e');
-      }
-      feedItems.add(new FeedItems(element.title, dataTester.parseGibberish(element.description) , element.link, element.content, element.media, element.pubDate));
+      imageUrl = findImageIfAvailable(element);
+      feedItems.add(new FeedItems(element.title, dataTester.parseGibberish(element.description) , element.link, element.content, imageUrl, element.pubDate, testAuthorName(element)));
     }
     return feedItems;
   }
