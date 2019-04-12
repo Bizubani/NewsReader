@@ -34,37 +34,44 @@ class _AddFeedState extends State <AddFeed>{
     // TODO: implement build
     return Scaffold(
       body: Material(
-        color: Colors.red,
-        child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Text('Copy and paste your feed into the box. '),
-                Card(
-                  margin: EdgeInsets.all(16.0),
-                  color: Colors.white,
+        child: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage("assets/settingbackground.jpg"),
+                fit: BoxFit.cover
+            )
+          ),
+          child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  Text('Copy and paste your feed into the box. '),
+                  Card(
+                    margin: EdgeInsets.all(16.0),
+                    color: Colors.white,
 
-                  child: TextField(
-                    controller: myTextControl,
-                    onSubmitted: (text) {
-                      print("before correction $text");
-                      if(!text.contains("http")){ // if the text is improperly formatted, fix
-                        text = text.trim();
-                        text = "http://" + text;
-                        print("after correction $text");
-                      }
-                      myTestFeed.value = text;
-                      waitForResult();
-                    },
-                    decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: "Enter Website"
+                    child: TextField(
+                      controller: myTextControl,
+                      onSubmitted: (text) {
+                        print("before correction $text");
+                        if(!text.contains("http")){ // if the text is improperly formatted, fix
+                          text = text.trim();
+                          text = "http://" + text;
+                          print("after correction $text");
+                        }
+                        myTestFeed.value = text;
+                        waitForResult();
+                      },
+                      decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: "Enter Website"
+                      ),
+
                     ),
-
                   ),
-                ),
-              ],
-            )),
+                ],
+              )),
+        ),
 
       ),
     );

@@ -6,6 +6,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:math';
 import 'webScrapper.dart';
 import 'settings.dart';
+import 'detailedScreen.dart';
 
 class NewsArticlesScreen extends StatefulWidget{
 
@@ -15,6 +16,7 @@ class NewsArticlesScreen extends StatefulWidget{
   final String newSite;
   final int count;
   final bool shouldItRead;
+
 
   @override
   _NewsArticlesWidgetState createState() => _NewsArticlesWidgetState();
@@ -35,6 +37,7 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
   List<String> transitionWords = ['Next ', 'Next up ', 'Continuing ', 'Among the other top stories ', 'Also ' ];
   List<String> openingWords = ['First up today ', 'The top story is ', 'First up ', 'We begin with '];
   List<String> lastWords = ['Finally ', 'Finally today ', 'Your final headline is ', 'Lastly '];
+  bool firstEntry = true;
 
   List<int> _chooseWords(int length){
     int i = 0;
@@ -127,8 +130,9 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
   @override
   Widget build(BuildContext context) {
 
-    if(widget.shouldItRead) {
+    if(widget.shouldItRead && firstEntry) {
       _readHeadlines();
+      firstEntry = false;
     }
     var height = MediaQuery.of(context).size.height;
 
@@ -209,9 +213,15 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
                                 title: Text(headline, style: TextStyle(color: Colors.white,fontSize: 18.0)),
                                 subtitle: Text(description, style: TextStyle(color: Colors.white, fontSize: 12.0),),
                                 onLongPress: () => _speak(headline, description),
-                                onTap: () =>
-                                    myAccess.getHttpBody(snapshot.data[index].linkToTheStory)
-                              //_launchURL(snapshot.data[index].linkToTheStory),
+                                onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) {
+                                          _stopSpeaking();
+                                         return DetailedScreen(snapshot.data[index]);
+
+                                        } ) )
+
                             ),
                             Image(
                               image: NetworkImage(snapshot.data[index].itemImageURL),
@@ -223,7 +233,8 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
                                 Text(pubDate, style: TextStyle(fontSize: 12.0),),
                                 Text(author, style: TextStyle(fontSize: 12.0))
                               ],
-                            )
+                            ),
+                            Divider(),
                           ],
                         );
                       }),

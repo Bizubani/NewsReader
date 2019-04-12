@@ -30,6 +30,12 @@ class _NormalSettingsState extends State<NormalSettings>{
         body: Material(
         child: Center(
           child: Container(
+            decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage("assets/settingbackground.jpg"),
+                    fit: BoxFit.cover
+                )
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>
@@ -39,25 +45,25 @@ class _NormalSettingsState extends State<NormalSettings>{
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
                   IconButton(
-                    icon: Icon(Icons.list, color: Colors.black, ),
+                    icon: Icon(Icons.list, color: Colors.white, size: 50.0,),
                     onPressed: ()=> Setting.setLayoutStyle(true)
 
                   ),
                   IconButton(
-                  icon: Icon(Icons.grid_on, color: Colors.black,),
+                  icon: Icon(Icons.grid_on, color: Colors.white, size: 50.0),
                       onPressed: ()=> Setting.setLayoutStyle(false)
                   )
                 ],
               ),
               Text('We currentlhy have $currentHeadlineCount stories set to read'),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
                   Text('Change amount'),
 
                 ],
               )],
             ),
-            color: Colors.red,
           ),
         ),
 
