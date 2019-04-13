@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'overlay.dart';
 import 'settings.dart';
 import 'accessRSSData.dart';
-import 'accessXMLData.dart';
 import 'feedContent.dart';
 import 'newsArticles.dart';
 import 'normalSettingsScreen.dart';
-import 'loading_screen.dart';
 import 'dart:ui';
 import 'addNewFeedScreen.dart';
 import 'utilityClasses.dart';
@@ -40,6 +37,31 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
 
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   NewFeed myTestFeed = new NewFeed();
+  GlobalSettings mySettings = new GlobalSettings();
+
+  //navigate to the settings screen and return the changes made by the user.
+  navigateToSettingsScreen(BuildContext context) async{
+    var result = await Navigator.push(context,
+    MaterialPageRoute(builder: (context) => NormalSettings(mySettings)));
+    setState(() {
+      updateSettings(result);
+    });
+  }
+  // update the saved settings if the user made a change
+  void updateSettings(var result){
+    if(mySettings.numberOfHeadlines != result.numberOfHeadlines){
+      mySettings.numberOfHeadlines = result.numberOfHeadlines;
+      Setting.setAmountOfHeadlines(mySettings.numberOfHeadlines);
+    }
+    if(mySettings.gridLayout !=  result.gridLayout){
+      mySettings.gridLayout = result.gridLayout;
+      Setting.setLayoutStyle(mySettings.gridLayout);
+    }
+    if(mySettings.readSpeed != result.readSpeed){
+      mySettings.readSpeed = result.readSpeed;
+      Setting.setReadSpeed(mySettings.readSpeed);
+    }
+  }
 
    navigateToAddFeed(BuildContext context) async{
 
@@ -62,7 +84,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
       // and the feed has not yet been added
       if(!feedAddresses.contains(myTestFeed.value)){
         feedAddresses.add(myTestFeed.value); // add the feed and update the shared preferences
-        Setting.setWebsites(feedAddresses);
+        Setting.setDefaultWebsites(feedAddresses);
         _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(" ${myTestFeed.value} added to feed list")));
       }
     }else{
@@ -78,9 +100,8 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
   List<String> feedAddresses = [];
   List<WebRSSAccess> feedData = new List();
 
-  WebXMLAccess test = new WebXMLAccess("http://www.looptt.com/rss.xml");
-  bool _listLayout;
 
+  //use the user's feed list to generate a list view layout
   Widget _createListView(BuildContext context, AsyncSnapshot snap, List<WebRSSAccess> feedData){
     List<FeedContent> data = snap.data;
     return new ListView.builder(
@@ -122,8 +143,8 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
                     // check the state of the readHeadlines variable and determine what should be displayed.
-                    _readHeadlines ? Text(" Click to disable feed sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ):
-                    Text(" Click to enable feed sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ),
+                    _readHeadlines ? Text("Press green button toggle sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ):
+                    Text(" Press red button to toggle sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ),
                     GestureDetector(
                       onTap: () {
                         // when a tap is detected, toggle sound on or off as necessary
@@ -163,6 +184,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
     });
   }
 
+  //use the user's feed list to generate a grid view layout
   Widget _createGridView(BuildContext context, AsyncSnapshot snap, List<WebRSSAccess> feedData){
     List<FeedContent> data = snap.data;
     return new GridView.builder(
@@ -200,12 +222,12 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
                                       newSite: title,
                                       shouldItRead: _readHeadlines,)))
                         ),
-                        Row(
+                       Column(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: <Widget>[
                             // check the state of the readHeadlines variable and determine what should be displayed.
-                            _readHeadlines ? Text(" Click to disable sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ):
-                            Text(" Click to enable sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ),
+                            _readHeadlines ? Text(" Press green button to toggle sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ):
+                            Text(" Press red button to toggle sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ),
                             GestureDetector(
                               onTap: () {
                                 // when a tap is detected, toggle sound on or off as necessary
@@ -245,21 +267,21 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
         });
   }
 
-  Future<void> printTest() async{
-    var result = await  test.provideXMLContent();
-    print(result);
-  }
 
-
-  Future<List<FeedContent>> initialize()async{
-      feedAddresses = await Setting.getWebsites();
+  Future<List<FeedContent>> initialize() async{
+      print("Attempting to get feed addresses");
+      feedAddresses = await Setting.getDefaultWebsites();
+      print(feedAddresses.length);
       if (feedAddresses.isEmpty) {
         print("string null");
       } else {
         for (var url in feedAddresses) {
           feedData.add(WebRSSAccess(url));
+          print(url);
         }
-        _listLayout = await Setting.getLayoutStyle();
+        mySettings.gridLayout = await Setting.getLayoutStyle(); // get the settings
+        mySettings.numberOfHeadlines = await Setting.getAmountOfHeadlines();
+        mySettings.readSpeed = await Setting.getReadSpeed();
         return getContent(feedData);
       }
   }
@@ -267,12 +289,8 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
   @override
   Widget build(BuildContext context) {
 
-    CustomOverlay myMainOverlay = CustomOverlay(context);
     var height = MediaQuery.of(context).size.height;
 
-
-
-    List<String> xmlfeedAddress = ["http://www.looptt.com/rss.xml"]; // Todo Decide what is to be done with this
 
     // Test function for the loopTT feed link.
 
@@ -282,7 +300,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
       return GestureDetector(
         onTap:() {
           if (label == 'Settings'){
-            Navigator.push(context, MaterialPageRoute(builder: (context) => NormalSettings()));
+            navigateToSettingsScreen(context);
           } else{
             navigateToAddFeed(context);
           }
@@ -350,7 +368,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
                   topTitle,
                   new Container(
                       height: height *0.90,
-                      child: _listLayout ? _createListView(context, snap, feedData):_createGridView(context, snap, feedData) // decide what layout to use based on user preferences
+                      child: mySettings.gridLayout ? _createListView(context, snap, feedData):_createGridView(context, snap, feedData) // decide what layout to use based on user preferences
                   ),
                   bottomLayout]); // decide what layout to use based on user preferences
                 }

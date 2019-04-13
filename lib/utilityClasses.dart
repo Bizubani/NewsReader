@@ -5,3 +5,12 @@ class NewFeed{
 
   NewFeed({this.result, this.value});
 }
+
+class GlobalSettings{
+
+  //GlobalSettings(this.gridLayout, this.numberOfHeadlines, this.readSpeed);
+
+  bool gridLayout;
+  int numberOfHeadlines;
+  double readSpeed;
+}
