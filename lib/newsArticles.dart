@@ -161,7 +161,7 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
     }
 
     Widget topTitle = new Container(
-        height: height * 0.03,
+        height: height * 0.08,
         child: new Row(
           children: <Widget>[
             Expanded(
@@ -198,7 +198,7 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
                 children: <Widget>[
                   topTitle,
                 Container(
-                  height: height * 0.97,
+                  height: height * 0.92,
                   child: ListView.builder(
                       itemCount: snapshot.data.length,
                       itemBuilder: (BuildContext context, int index){

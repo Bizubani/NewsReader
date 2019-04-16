@@ -7,6 +7,7 @@ import 'normalSettingsScreen.dart';
 import 'dart:ui';
 import 'addNewFeedScreen.dart';
 import 'utilityClasses.dart';
+import 'selectFeedScreen.dart';
 
 class MyAlternateHomeScreen extends StatefulWidget {
   MyAlternateHomeScreen({Key key, this.title}) : super(key: key);
@@ -17,293 +18,359 @@ class MyAlternateHomeScreen extends StatefulWidget {
   _MyAlternateHomeScreenState createState() => _MyAlternateHomeScreenState();
 }
 
-class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
+class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
+{
+  //class members
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  NewFeed _myTestFeed = new NewFeed();
+  GlobalSettings _mySettings = new GlobalSettings();
+  final double _bottomLayoutHeight = 0.07;
+  final double _mainContentHeight = 0.85;
+  final double _topLayoutHeight = 0.08;
+  bool reentry = false;
+  String _loadingMessage = "";
+  int _feedAddressSize = 0; // holds the value of _feedaddress so that when it is changed through addition it allows return to the main screen
+  List<String> _feedAddresses = [];
+  List<WebRSSAccess> _feedData = [];
+  List<FeedContent> _data = [];
 
-
-  Future<List<FeedContent>> getContent(List<WebRSSAccess> feedData) async {
-
-    List<FeedContent> data = new List();
+  Future<List<FeedContent>> _getContent(List<WebRSSAccess> feedData) async
+  {
+    _feedAddressSize = _feedAddresses.length;
+    int count = 0;
     for(var item in feedData){
+        _data.add(await item.makeFeedContent());
 
-      data.add(await item.makeFeedContent());
+      setState(() {
+        _loadingMessage = "Getting your news from " + _data[count++].newSiteTitle;
+
+      });
+        print("FeedAddresses size = ${_feedAddresses.length} and Data's size = ${_data.length}");
+        print(_loadingMessage);
     }
-
-    for(var item in data){
+    for(var item in _data){
       item.shouldHeadlinesBeRead = await Setting.getReadHeadlines(item.newSiteTitle);
     }
-
-    return data;
+    _loadingMessage = "";
+    return _data;
   }
 
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
-  NewFeed myTestFeed = new NewFeed();
-  GlobalSettings mySettings = new GlobalSettings();
+
+  void _updateUserFeedList(List<String> updatedList)
+  {
+    print("FeedAddresses before additon = $_feedAddresses");
+    for (String feed in updatedList)
+    {
+      if(!_feedAddresses.contains(feed))
+      {
+        setState(()
+        {
+          _feedAddresses.add(feed);
+        });
+      }
+    }
+    print("FeedAddresses after work = $_feedAddresses");
+    Setting.setUserWebsites(_feedAddresses);
+  }
+
+  // when the user's feed list is empty, allow them to navigate to the feed select screen
+  _navigateToSelectFeedScreen (BuildContext context) async
+  {
+    var result = await Navigator.push(context,
+        MaterialPageRoute(builder: (context) => SelectScreen()
+      )
+    );
+      try{_updateUserFeedList(result);}
+      catch (e)
+      {
+        print("Encounted error, $e");
+      }
+  }
 
   //navigate to the settings screen and return the changes made by the user.
-  navigateToSettingsScreen(BuildContext context) async{
+  _navigateToSettingsScreen(BuildContext context) async{
     var result = await Navigator.push(context,
-    MaterialPageRoute(builder: (context) => NormalSettings(mySettings)));
+    MaterialPageRoute(builder: (context) => NormalSettings(_mySettings)));
     setState(() {
-      updateSettings(result);
+      _updateSettings(result);
     });
   }
+
+
   // update the saved settings if the user made a change
-  void updateSettings(var result){
-    if(mySettings.numberOfHeadlines != result.numberOfHeadlines){
-      mySettings.numberOfHeadlines = result.numberOfHeadlines;
-      Setting.setAmountOfHeadlines(mySettings.numberOfHeadlines);
+  void _updateSettings(var result){
+    if(_mySettings.numberOfHeadlines != result.numberOfHeadlines){
+      _mySettings.numberOfHeadlines = result.numberOfHeadlines;
+      Setting.setAmountOfHeadlines(_mySettings.numberOfHeadlines);
     }
-    if(mySettings.gridLayout !=  result.gridLayout){
-      mySettings.gridLayout = result.gridLayout;
-      Setting.setLayoutStyle(mySettings.gridLayout);
+    if(_mySettings.gridLayout !=  result.gridLayout){
+      _mySettings.gridLayout = result.gridLayout;
+      Setting.setLayoutStyle(_mySettings.gridLayout);
     }
-    if(mySettings.readSpeed != result.readSpeed){
-      mySettings.readSpeed = result.readSpeed;
-      Setting.setReadSpeed(mySettings.readSpeed);
+    if(_mySettings.readSpeed != result.readSpeed){
+      _mySettings.readSpeed = result.readSpeed;
+      Setting.setReadSpeed(_mySettings.readSpeed);
     }
   }
 
-   navigateToAddFeed(BuildContext context) async{
+   _navigateToAddFeed(BuildContext context) async{
 
    var result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context)=> AddFeed()));
 
-   print(feedAddresses);
+   print(_feedAddresses);
     setState(() {
-    determineIfToAddFeed(result);
+    _determineIfToAddFeed(result);
   });
-  print(feedAddresses);
+  print(_feedAddresses);
   }
 
-  void determineIfToAddFeed(var result){
-    myTestFeed = result;
-    print(myTestFeed.result);
+  void _determineIfToAddFeed(var result){
+    _myTestFeed = result;
+    try
+    {
+    print("result ${_myTestFeed.result}");
     // if the feed is valid
-    if(myTestFeed.result == 3){
+    if(_myTestFeed.result == 3)
+    {
       // and the feed has not yet been added
-      if(!feedAddresses.contains(myTestFeed.value)){
-        feedAddresses.add(myTestFeed.value); // add the feed and update the shared preferences
-        Setting.setDefaultWebsites(feedAddresses);
-        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(" ${myTestFeed.value} added to feed list")));
+      if(!_feedAddresses.contains(_myTestFeed.value)){
+        _feedAddresses.add(_myTestFeed.value); // add the feed and update the shared preferences
+        Setting.setUserWebsites(_feedAddresses);
+        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(" ${_myTestFeed.value} added to feed list")));
       }
-    }else{
-      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("unable to add ${myTestFeed.value} to feed list. Invalid URL")));
+    }
+    else
+      {
+      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("unable to add ${_myTestFeed.value} to feed list. Invalid URL")));
+      }
+    }
+    catch (e)
+    {
+      print("Null value entered, we encountered exception $e");
     }
   }
 
   @override
-  void initState() {
+  void initState()
+  {
 
     super.initState();
   }
-  List<String> feedAddresses = [];
-  List<WebRSSAccess> feedData = new List();
-
 
   //use the user's feed list to generate a list view layout
   Widget _createListView(BuildContext context, AsyncSnapshot snap, List<WebRSSAccess> feedData){
     List<FeedContent> data = snap.data;
-    return new ListView.builder(
-        itemCount: data.length,
-        itemBuilder: (BuildContext context, int index){
-
-          String title = data[index].newSiteTitle;
-          bool _readHeadlines = data[index].shouldHeadlinesBeRead;
-        return Card(
-          color: Colors.black26,
-          child: Stack(
-              children:<Widget>[
-              Center(
-              child: Container(
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: data[index].imageUrl == null? Icon(Icons.aspect_ratio): Image.network( data[index].imageUrl,height: 60.0, width: 80.0 ,),
-                ) // if there is no associated  image,
-              )
-              ),
-              Column(
-              children: <Widget>[
-                ListTile(
-                  title: Text(title, style: TextStyle(color: Colors.white,  )),
-                  subtitle: Text("Click tile for the news", style: TextStyle(color: Colors.white, fontSize: 12.0, ) ),
-
-
-                  // launch detailed news feed listing when a source is selected.
-                  onTap:  ()=> Navigator.push(
-                      context, MaterialPageRoute(
-                      builder: (context) =>
-                        NewsArticlesScreen(
-                          listing: feedData[index],
-                          newSite: title,
-                          shouldItRead: _readHeadlines,)))
-        ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    // check the state of the readHeadlines variable and determine what should be displayed.
-                    _readHeadlines ? Text("Press green button toggle sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ):
-                    Text(" Press red button to toggle sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ),
-                    GestureDetector(
-                      onTap: () {
-                        // when a tap is detected, toggle sound on or off as necessary
-
-                        // if sound is enabled, disable
-                        if (_readHeadlines == true){
-                          data[index].shouldHeadlinesBeRead = false; // set value of class variable directly to expedite updates to the UI
-                          Setting.setReadHeadlines(false, title);
-
-                          //else if disabled, enable
-                        } else if (_readHeadlines == false){
-                          data[index].shouldHeadlinesBeRead = true; // set value of class variable directly to expedite updates to the UI
-                          Setting.setReadHeadlines(true, title);
-                        }
-                        setState(() {});
-                        print(_readHeadlines);
-
-                      },
-                      child: _readHeadlines ? Image(
-                        image: AssetImage("assets/read.png"),
-                        height: 20.0,
-                        width: 20.0,
-                        //color: Colors.red,
-                      ): Image(
-                        image: AssetImage("assets/dontread.png"),
-                        height: 20.0,
-                        width: 20.0,
-                        //color: Colors.white,
-                      ),
-                    )
-
-                  ],
+    return RefreshIndicator(
+      onRefresh: () => Future.delayed(Duration(seconds: 1)),
+      child: new ListView.builder(
+          itemCount: data.length,
+          itemBuilder: (BuildContext context, int index)
+          {
+            String title = data[index].newSiteTitle;
+            bool _readHeadlines = data[index].shouldHeadlinesBeRead;
+          return Card(
+            color: Colors.black26,
+            child: Stack(
+                children:<Widget>[
+                Center(
+                child: Container(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: data[index].imageUrl == null? Icon(Icons.aspect_ratio): Image.network( data[index].imageUrl,height: 60.0, width: 80.0 ,),
+                  ) // if there is no associated  image,
                 )
-              ],
-            ),
-          ]));
-    });
+                ),
+                Column(
+                children: <Widget>[
+                  ListTile(
+                    title: Text(title, style: TextStyle(color: Colors.white,  )),
+                    subtitle: Text("Click tile for the news", style: TextStyle(color: Colors.white, fontSize: 12.0, ) ),
+
+
+                    // launch detailed news feed listing when a source is selected.
+                    onTap:  ()=> Navigator.push(
+                        context, MaterialPageRoute(
+                        builder: (context) =>
+                          NewsArticlesScreen(
+                            listing: feedData[index],
+                            newSite: title,
+                            shouldItRead: _readHeadlines,)))
+          ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      // check the state of the readHeadlines variable and determine what should be displayed.
+                      _readHeadlines ? Text("Press green button toggle sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ):
+                      Text(" Press red button to toggle sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ),
+                      GestureDetector(
+                        onTap: () {
+                          // when a tap is detected, toggle sound on or off as necessary
+
+                          // if sound is enabled, disable
+                          if (_readHeadlines == true){
+                            data[index].shouldHeadlinesBeRead = false; // set value of class variable directly to expedite updates to the UI
+                            Setting.setReadHeadlines(false, title);
+
+                            //else if disabled, enable
+                          } else if (_readHeadlines == false){
+                            data[index].shouldHeadlinesBeRead = true; // set value of class variable directly to expedite updates to the UI
+                            Setting.setReadHeadlines(true, title);
+                          }
+                          setState(() {});
+                          print(_readHeadlines);
+
+                        },
+                        child: _readHeadlines ? Image(
+                          image: AssetImage("assets/read.png"),
+                          height: 20.0,
+                          width: 20.0,
+                          //color: Colors.red,
+                        ): Image(
+                          image: AssetImage("assets/dontread.png"),
+                          height: 20.0,
+                          width: 20.0,
+                          //color: Colors.white,
+                        ),
+                      )
+
+                    ],
+                  )
+                ],
+              ),
+            ]));
+      }),
+    );
   }
 
   //use the user's feed list to generate a grid view layout
   Widget _createGridView(BuildContext context, AsyncSnapshot snap, List<WebRSSAccess> feedData){
     List<FeedContent> data = snap.data;
-    return new GridView.builder(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-        itemCount: data.length,
-        itemBuilder: (BuildContext context, int index){
+    return RefreshIndicator(
+      onRefresh: () => Future.delayed(Duration(seconds: 1)),
+      child: new GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+          itemCount: data.length,
+          itemBuilder: (BuildContext context, int index){
 
-          String title = data[index].newSiteTitle;
-          bool _readHeadlines = data[index].shouldHeadlinesBeRead;
-          return Card(
-              color: Colors.black26,
-              child: Stack(
-                  children:<Widget>[
-                    Center(
-                        child: Container(
-                            alignment: Alignment.bottomCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: data[index].imageUrl == null? Icon(Icons.aspect_ratio): Image.network( data[index].imageUrl,height: 60.0, width: 80.0 ,),
-                            ) // if there i
-                        )
-                    ),
-                    Column(
-                      children: <Widget>[
-                        ListTile(
-                            title: Text(title, style: TextStyle(color: Colors.white),),
-                            subtitle: Text("Click for the news", style: TextStyle(color: Colors.white), ),
+            String title = data[index].newSiteTitle;
+            bool _readHeadlines = data[index].shouldHeadlinesBeRead;
+            return Card(
+                color: Colors.black26,
+                child: Stack(
+                    children:<Widget>[
+                      Center(
+                          child: Container(
+                              alignment: Alignment.bottomCenter,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: data[index].imageUrl == null? Icon(Icons.aspect_ratio): Image.network( data[index].imageUrl,height: 60.0, width: 80.0 ,),
+                              ) // if there i
+                          )
+                      ),
+                      Column(
+                        children: <Widget>[
+                          ListTile(
+                              title: Text(title, style: TextStyle(color: Colors.white),),
+                              subtitle: Text("Click for the news", style: TextStyle(color: Colors.white), ),
 
-                            // launch detailed news feed listing when a source is selected.
-                            onTap:  ()=> Navigator.push(
-                                context, MaterialPageRoute(
-                                builder: (context) =>
-                                    NewsArticlesScreen(
-                                      listing: feedData[index],
-                                      newSite: title,
-                                      shouldItRead: _readHeadlines,)))
-                        ),
-                       Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: <Widget>[
-                            // check the state of the readHeadlines variable and determine what should be displayed.
-                            _readHeadlines ? Text(" Press green button to toggle sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ):
-                            Text(" Press red button to toggle sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ),
-                            GestureDetector(
-                              onTap: () {
-                                // when a tap is detected, toggle sound on or off as necessary
+                              // launch detailed news feed listing when a source is selected.
+                              onTap:  ()=> Navigator.push(
+                                  context, MaterialPageRoute(
+                                  builder: (context) =>
+                                      NewsArticlesScreen(
+                                        listing: feedData[index],
+                                        newSite: title,
+                                        shouldItRead: _readHeadlines,)))
+                          ),
+                         Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: <Widget>[
+                              // check the state of the readHeadlines variable and determine what should be displayed.
+                              _readHeadlines ? Text(" Press green button to toggle sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ):
+                              Text(" Press red button to toggle sound ", style: TextStyle(color: Colors.white, fontSize: 12.0, ), ),
+                              GestureDetector(
+                                onTap: () {
+                                  // when a tap is detected, toggle sound on or off as necessary
 
-                                // if sound is enabled, disable
-                                if (_readHeadlines == true){
-                                  data[index].shouldHeadlinesBeRead = false; // set value of class variable directly to expedite updates to the UI
-                                  Setting.setReadHeadlines(false, title);
+                                  // if sound is enabled, disable
+                                  if (_readHeadlines == true){
+                                    data[index].shouldHeadlinesBeRead = false; // set value of class variable directly to expedite updates to the UI
+                                    Setting.setReadHeadlines(false, title);
 
-                                  //else if disabled, enable
-                                } else if (_readHeadlines == false){
-                                  data[index].shouldHeadlinesBeRead = true; // set value of class variable directly to expedite updates to the UI
-                                  Setting.setReadHeadlines(true, title);
-                                }
-                                setState(() {});
-                                print(_readHeadlines);
+                                    //else if disabled, enable
+                                  } else if (_readHeadlines == false){
+                                    data[index].shouldHeadlinesBeRead = true; // set value of class variable directly to expedite updates to the UI
+                                    Setting.setReadHeadlines(true, title);
+                                  }
+                                  setState(() {});
+                                  print(_readHeadlines);
 
-                              },
-                              child: _readHeadlines ? Image(
-                                image: AssetImage("assets/read.png"),
-                                height: 20.0,
-                                width: 20.0,
-                                //color: Colors.red,
-                              ): Image(
-                                image: AssetImage("assets/dontread.png"),
-                                height: 20.0,
-                                width: 20.0,
-                                //color: Colors.white,
-                              ),
-                            )
+                                },
+                                child: _readHeadlines ? Image(
+                                  image: AssetImage("assets/read.png"),
+                                  height: 20.0,
+                                  width: 20.0,
+                                  //color: Colors.red,
+                                ): Image(
+                                  image: AssetImage("assets/dontread.png"),
+                                  height: 20.0,
+                                  width: 20.0,
+                                  //color: Colors.white,
+                                ),
+                              )
 
-                          ],
-                        )
-                      ],
-                    ),
-                  ]));
-        });
+                            ],
+                          )
+                        ],
+                      ),
+                    ]));
+          }),
+    );
   }
 
 
-  Future<List<FeedContent>> initialize() async{
-      print("Attempting to get feed addresses");
-      feedAddresses = await Setting.getDefaultWebsites();
-      print(feedAddresses.length);
-      if (feedAddresses.isEmpty) {
-        print("string null");
-      } else {
-        for (var url in feedAddresses) {
-          feedData.add(WebRSSAccess(url));
-          print(url);
-        }
-        mySettings.gridLayout = await Setting.getLayoutStyle(); // get the settings
-        mySettings.numberOfHeadlines = await Setting.getAmountOfHeadlines();
-        mySettings.readSpeed = await Setting.getReadSpeed();
-        return getContent(feedData);
+  Future<List<FeedContent>> _initialize() async{
+      if(_data.isNotEmpty)
+      {
+        return _data;
       }
+      print("Attempting to get feed addresses");
+      _feedAddresses = await Setting.getUserWebsites();
+      print("There are currently ${_feedAddresses.length} feed addresses");
+      for (var url in _feedAddresses) {
+        if(url != '' || url != null )
+        {
+          _feedData.add(WebRSSAccess(url));
+        }
+      }
+      _mySettings.gridLayout = await Setting.getLayoutStyle(); // get the settings
+      _mySettings.numberOfHeadlines = await Setting.getAmountOfHeadlines();
+      _mySettings.readSpeed = await Setting.getReadSpeed();
+      return _getContent(_feedData);
   }
 
   @override
   Widget build(BuildContext context) {
-
     var height = MediaQuery.of(context).size.height;
-
-
-    // Test function for the loopTT feed link.
-
-    //printTest();
 
     Widget _buildBottomLayout(Color color, IconData icon, String label ){
       return GestureDetector(
         onTap:() {
-          if (label == 'Settings'){
-            navigateToSettingsScreen(context);
-          } else{
-            navigateToAddFeed(context);
+          if (label == 'Settings')
+          {
+            _navigateToSettingsScreen(context);
           }
+          else if(label == 'Add feed')
+          {
+            _navigateToAddFeed(context);
+          }
+          else
+            {
+              _navigateToSelectFeedScreen(context);
+            }
         },
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -330,49 +397,109 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
       );
     }
 
-    Widget topTitle = new Container(
-      height: height * 0.03,
+    Widget _topTitle = new Container(
+      height: height * _topLayoutHeight,
       child: new Row(
         children: <Widget>[
           Expanded(
            child: Padding(
              padding: const EdgeInsets.only(top:24.0),
-             child: Text(widget.title, textAlign: TextAlign.center,),
+             child: Text("My feed", textAlign: TextAlign.center,),
            )
           )
         ],
       )
     );
-    Widget bottomLayout = new Container(
-      //Todo change magic numbers
-      height: height * 0.07,
+    Widget _bottomLayout = new Container(
+      height: height * _bottomLayoutHeight,
       child: Row(
-
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
-          _buildBottomLayout(Colors.white, Icons.add, 'Add new feed',  ),
-          _buildBottomLayout(Colors.white, Icons.settings, 'Settings', ),
+          _buildBottomLayout(Colors.white, Icons.add, 'Add feed'),
+          _buildBottomLayout(Colors.white, Icons.launch, 'Find feed'),
+          _buildBottomLayout(Colors.white, Icons.settings, 'Settings')
         ],
       ),
     );
 
 
 
-    Widget loadingScreen = Container(
+    Widget _loadingScreen = Container(
           child: FutureBuilder(
-              future: feedAddresses.isEmpty ? initialize(): getContent(feedData),
-              builder: (BuildContext context, AsyncSnapshot snap){
-                if(snap.hasData){
+              future:  _initialize(),
+              builder: (BuildContext context, AsyncSnapshot snap)
+              {
+                if(snap.hasData && _feedAddressSize <= _data.length )
+                {
+                  if(snap.data.length == 0)
+                  {
+                    return Container(
+                      color: Colors.black54,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          Center(
+                              child: Text(
+                                "Welcome",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28.0
+                                ),
+                              ),
+                          ),
+                          RaisedButton(
+                            child: Text(
+                                "Click me to find your first feed",
+                                style: TextStyle(
+                                  fontSize: 12.0,
+                                  color: Colors.black54
+                                ),
+                            ),
+
+                            onPressed:() => _navigateToSelectFeedScreen(context),
+                            shape: new RoundedRectangleBorder(
+                              borderRadius: new BorderRadius.circular(25.0)
+                            ),
+                          ),
+                          RaisedButton(
+                            child: Text(
+                                "Click here to add your own",
+                            style: TextStyle(
+                              fontSize: 12.0,
+                              color: Colors.black54
+                              ),
+                            ),
+                            onPressed: () => _navigateToAddFeed(context),
+                            shape: new RoundedRectangleBorder(
+                              borderRadius: new BorderRadius.circular(25.0)
+                            ),
+                          ),
+                          Center(
+                            child: Text(
+                              "Your feed is currently empty, add some feeds above",
+                              style: TextStyle(
+                                fontSize: 12.0,
+                                color: Colors.white
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    );
+                  }
                   return Column
-                    (children: <Widget>[
-                  topTitle,
+                    (children: <Widget>
+                  [
+                  _topTitle,
                   new Container(
-                      height: height *0.90,
-                      child: mySettings.gridLayout ? _createListView(context, snap, feedData):_createGridView(context, snap, feedData) // decide what layout to use based on user preferences
+                      height: height * _mainContentHeight,
+                      child: _mySettings.gridLayout ? _createListView(context, snap, _feedData):_createGridView(context, snap, _feedData) // decide what layout to use based on user preferences
                   ),
-                  bottomLayout]); // decide what layout to use based on user preferences
+                  _bottomLayout
+                  ]); // decide what layout to use based on user preferences
                 }
-                else{
+                else
+                  {
                   return Scaffold(
                       body: Container(
                       decoration: BoxDecoration(
@@ -380,32 +507,29 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen> {
                             image: AssetImage("assets/loadingbackground.jpg",),
                           fit: BoxFit.cover,
                         ),
-
                       ),
-                  )
+                      child: Center(
+                        child: Text(_loadingMessage, style: TextStyle(fontSize: 14.0),),
+                      ),  
+                   )
                   );
                 }
               }),
     );
 
-
-
     return Scaffold(
       key: _scaffoldKey,
-      body: RefreshIndicator(
-          onRefresh: () => Future.delayed(Duration(seconds: 1)),
-        child: Container(
-          decoration: BoxDecoration(
-            image: new DecorationImage(
-                image: new AssetImage("assets/mainback.jpg"),
-              fit: BoxFit.cover
-            )
-          ),
-          child: new BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-              child: loadingScreen,
+      body: Container(
+        decoration: BoxDecoration(
+          image: new DecorationImage(
+              image: new AssetImage("assets/mainback.jpg"),
+            fit: BoxFit.cover
           )
         ),
+        child: new BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+            child: _loadingScreen,
+        )
       )
     );
   }

@@ -1,0 +1,29 @@
+News
+Reuters World News http://feeds.reuters.com/Reuters/worldNews
+BBC World News http://feeds.bbci.co.uk/news/world/rss.xml
+Der Spiegel http://www.spiegel.de/international/index.rss
+New York Times http://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml
+Huffington Post https://www.huffpost.com/section/front-page/feed
+RealWire https://www.realwire.com/rss/recent.asp?row=&view=Synopsis
+Politico https://www.politico.com/rss/politics08.xml
+
+Sports
+ESPN http://www.espn.com/espn/rss/news
+
+Gaming
+Gamespot https://www.gamespot.com/feeds/mashup/
+IGN http://feeds.ign.com/ign/games-all
+Gamasutra https://feeds.feedburner.com/GamasutraNews
+RockPaperShotgun http://feeds.feedburner.com/RockPaperShotgun
+
+Tech
+Hacker News https://hnrss.org/newest
+TechRadar https://www.techradar.com/rss
+Engadget http://www.engadget.com/rss.xml
+
+Business
+Wall Street Journal https://feeds.a.dj.com/rss/RSSMarketsMain.xml
+
+Entertainment
+BuzzFeed https://www.buzzfeed.com/world.xml
+Mashable http://feeds.mashable.com/mashable

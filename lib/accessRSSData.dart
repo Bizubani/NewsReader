@@ -9,7 +9,16 @@ import 'verifyDataIntergity.dart';
 class WebRSSAccess {
   // assign the url string to the web address variable.
   WebRSSAccess(String webAddress){
-    this.webAddress = webAddress;
+    _setWebAddress(webAddress);
+  }
+
+  void _setWebAddress(String address){
+    if(address != "" || address != null){
+      webAddress = address;
+    } else{
+      Exception invalidString = new Exception("Invalid url");
+      throw invalidString;
+    }
   }
 
   //test if a string contains a img src tag

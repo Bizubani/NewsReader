@@ -71,7 +71,7 @@ class Setting{
     return prefs.getStringList(_defaultWebsites)  ?? ["http://feeds.reuters.com/Reuters/worldNews","http://feeds.bbci.co.uk/news/world/rss.xml", "https://www.buzzfeed.com/world.xml",
     "http://www.spiegel.de/international/index.rss","http://www.espn.com/espn/rss/news", "https://www.techradar.com/rss", "https://hnrss.org/newest", "https://www.gamespot.com/feeds/mashup/",
     "https://feeds.feedburner.com/GamasutraNews","http://www.engadget.com/rss.xml", "http://feeds.mashable.com/mashable", "http://feeds.ign.com/ign/games-all",
-    "http://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml", "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", "https://www.huffpost.com/section/front-page/feed"
+    "http://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml", "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", "https://www.huffpost.com/section/front-page/feed",
     "http://feeds.feedburner.com/RockPaperShotgun", "https://www.politico.com/rss/politics08.xml", "https://www.realwire.com/rss/recent.asp?row=&view=Synopsis", ];
 
   }// end of getDefaultWebsites
@@ -83,7 +83,7 @@ class Setting{
 
   static Future<List<String>> getUserWebsites() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_userWebsites) ?? [""];
+    return prefs.getStringList(_userWebsites) ?? [];
   } //end of getUserWebsites
 
   }//end of Settings class
