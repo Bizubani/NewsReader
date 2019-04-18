@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'feedContent.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share/share.dart';
 
 class DetailedScreen extends StatelessWidget {
 
@@ -53,7 +54,11 @@ class DetailedScreen extends StatelessWidget {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Icon(Icons.share, size: 35.0, color: Colors.white,),
+                    child: GestureDetector(
+                      onTap: () => Share.share(thisItem.linkToTheStory),
+                        child: Icon(Icons.share,
+                          size: 35.0,
+                          color: Colors.white,)),
                   )
                 ],
               ),

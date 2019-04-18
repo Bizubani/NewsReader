@@ -5,7 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:math';
 import 'webScrapper.dart';
-import 'settings.dart';
 import 'detailedScreen.dart';
 
 class NewsArticlesScreen extends StatefulWidget{
@@ -14,7 +13,7 @@ class NewsArticlesScreen extends StatefulWidget{
 
   final WebRSSAccess listing;
   final String newSite;
-  final int count;
+  final double count;
   final bool shouldItRead;
 
 
@@ -63,7 +62,9 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
     String headlines = '';
     isSpeaking = true;
     var articles = await  cycleItemList(widget.listing);
-    int count = await Setting.getAmountOfHeadlines();
+    double count = widget.count;
+    print(count);
+    print("this is the value of read count = $count");
     int openingLength = openingWords.length;
     int lastLength = lastWords.length;
     int transitionLength = transitionWords.length;

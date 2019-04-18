@@ -23,8 +23,15 @@ class WebRSSAccess {
 
   //test if a string contains a img src tag
   int _testForImgSrc(String value){
-    int position = value.indexOf("<img src");
-    return position;
+    int sourcePosition = 0;
+    int position = value.indexOf("<img ");
+    if(position != -1)
+      {
+        print("position in _testForImgSrc - $position");
+        sourcePosition = value.indexOf("src", position);
+      }
+
+    return sourcePosition;
   }
 
   //hold logic to extract image Url from a string
@@ -41,25 +48,53 @@ class WebRSSAccess {
     return testString;
   }
 
-  //attempt to find images attached to stories
-  String _findImageIfAvailable(RssItem item){
+  bool _testForHTTPStart(String test)
+  {
+    if(test.startsWith("http"))
+    {
+      return true;
+    }
+    else
+      return false;
+  }
 
+  //attempt to find images attached to stories
+  String _findImageIfAvailable(RssItem item)
+  {
+    String temp = "";
     String imageUrl = "";
+
     try{
-      imageUrl = item.media.thumbnails[0].url;
+      temp = item.media.thumbnails[0].url;
+      if(_testForHTTPStart(temp))
+        {
+          imageUrl = temp;
+        }
     }
     catch(e){}
     try{
 
-      imageUrl = item.media.contents[0].url;
+      temp = item.media.contents[0].url;
+      if(_testForHTTPStart(temp))
+      {
+        imageUrl = temp;
+      }
     }
     catch (e){}
     try{
-      imageUrl = item.enclosure.url;
+      temp = item.enclosure.url;
+      if(_testForHTTPStart(temp))
+      {
+        imageUrl = temp;
+      }
     }
     catch (e){}
     try{
-      imageUrl = _extractImageURL(item.content.value);
+      temp = _extractImageURL(item.content.value);
+      if(_testForHTTPStart(temp))
+      {
+        imageUrl = temp;
+      }
     }
     catch(e){}
     String searchString = item.description;
@@ -138,7 +173,7 @@ class WebRSSAccess {
     String imageUrl = " ";
     for(var element in data){
       imageUrl = _findImageIfAvailable(element);
-      feedItems.add(new FeedItems(element.title, dataTester.parseGibberish(element.description) , element.link, element.content, imageUrl, element.pubDate, _testAuthorName(element)));
+      feedItems.add(new FeedItems(element.title, dataTester.parseGibberish(element.description) , element.link, element.content, imageUrl, element.pubDate == null ? "": element.pubDate, _testAuthorName(element)));
     }
     return feedItems;
   }

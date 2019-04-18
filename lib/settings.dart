@@ -21,14 +21,14 @@ class Setting{
     return prefs.getDouble(_readSpeed) ?? 1.0; // have a returnable default read speed
   }//end of getReadSpeed
 
-  static Future<bool> setAmountOfHeadlines(int amount) async{
+  static Future<bool> setAmountOfHeadlines(double amount) async{
     final prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_amountOfHeadlines, amount);
+    return prefs.setDouble(_amountOfHeadlines, amount);
   }//end of setAmountOfHeadlines
 
-  static Future<int> getAmountOfHeadlines() async{
+  static Future<double> getAmountOfHeadlines() async{
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_amountOfHeadlines) ?? 5; // have a returnable default amount
+    return prefs.getDouble(_amountOfHeadlines) ?? 4; // have a returnable default amount
   }//end of getAmountOfHeadlines
 
   static Future<bool> setGetNotified(bool notify) async{

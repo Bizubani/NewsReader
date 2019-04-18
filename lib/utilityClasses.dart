@@ -10,6 +10,6 @@ class GlobalSettings
 {  //GlobalSettings(this.gridLayout, this.numberOfHeadlines, this.readSpeed);
 
   bool gridLayout;
-  int numberOfHeadlines;
+  double numberOfHeadlines;
   double readSpeed;
 }

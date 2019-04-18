@@ -44,7 +44,11 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
     for(var item in feedData)
     {
       FeedContent nextItem = await item.makeFeedContent();
-      _data.add(nextItem);
+     if( !_data.any((content)=> content.newSiteTitle == nextItem.newSiteTitle))
+       {
+         _data.add(nextItem);
+
+       }
 
       setState(() {
         _loadingMessage = "Getting your news from " + _data[count++].newSiteTitle;
@@ -69,8 +73,14 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
       }
       _feedData.addAll(_newFeedData);
     _newFeedList = [];
+    _initializeDeletionCheckList();
     _getContent(_newFeedData);
 
+  }
+
+  void _initializeDeletionCheckList()
+  {
+    _markedForDeletion = new List.filled(_feedAddresses.length, false);
   }
 
 
@@ -264,11 +274,15 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
       print("data before removal = $_data");
       _data.removeWhere((feed) => feed.newSiteTitle == item[1]);
       print("data after removal = $_data");
+      if(_feedAddresses.isEmpty && _data.isEmpty)
+      {
+        _feedData = []; // Todo Refactor this class and make sensible. Meaning. Make WebRssFeed Static class and remove the owrkarounds
+      }
     }
     Setting.setUserWebsites(_feedAddresses);
     setState(() {
       _readyForDeletion = false;
-      _markedForDeletion = new List.filled(_feedAddresses.length, false);
+      _initializeDeletionCheckList();
     });
   }
 
@@ -314,8 +328,21 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
                   ListTile(
                     title: Text(title, style: TextStyle(color: Colors.white,  )),
                     subtitle: Text("Click tile for the news", style: TextStyle(color: Colors.white, fontSize: 12.0, ) ),
-
-
+                      trailing: _checkDeleteStatus(index, title),
+                      onLongPress: (){
+                        setState(() {
+                          if(_readyForDeletion)
+                          {
+                            print("in truth test = $_readyForDeletion");
+                            _readyForDeletion = false;
+                          }
+                          else
+                          {
+                            print("in false test = $_readyForDeletion");
+                            _readyForDeletion = true;
+                          }
+                        });
+                      },
                     // launch detailed news feed listing when a source is selected.
                     onTap:  ()=> Navigator.push(
                         context, MaterialPageRoute(
@@ -323,6 +350,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
                           NewsArticlesScreen(
                             listing: feedData[index],
                             newSite: title,
+                            count: _mySettings.numberOfHeadlines,
                             shouldItRead: _readHeadlines,)))
           ),
                   Row(
@@ -412,6 +440,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
                                       NewsArticlesScreen(
                                         listing: feedData[index],
                                         newSite: title,
+                                        count: _mySettings.numberOfHeadlines,
                                         shouldItRead: _readHeadlines,))),
                             onLongPress: (){
                                 setState(() {
@@ -489,7 +518,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
           _feedData.add(WebRSSAccess(url));
         }
       }
-      _markedForDeletion = new List.filled(_feedAddresses.length, false);
+      _initializeDeletionCheckList();
       _mySettings.gridLayout = await Setting.getLayoutStyle(); // get the settings
       _mySettings.numberOfHeadlines = await Setting.getAmountOfHeadlines();
       _mySettings.readSpeed = await Setting.getReadSpeed();

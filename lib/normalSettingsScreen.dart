@@ -12,7 +12,7 @@ class NormalSettings extends StatefulWidget{
 
 class _NormalSettingsState extends State<NormalSettings>{
 
-  int _currentHeadlineCount;
+  double _currentHeadlineCount;
   bool _currentViewLayout;
   double _readSpeed;
   TextEditingController myController = new TextEditingController();
@@ -77,9 +77,34 @@ class _NormalSettingsState extends State<NormalSettings>{
                     )
                   ],
                 ),
-                Center(
-                    child: Text('We currentlhy have $_currentHeadlineCount stories set to read',
-                        style: TextStyle(fontSize: 14.0, color: Colors.white))),
+                Column(
+                  children: <Widget>[
+                    Center(
+                        child: Text('We currently have ${_currentHeadlineCount.toInt()} stories set to read',
+                            style: TextStyle(fontSize: 14.0, color: Colors.white))),
+                    Row(
+                      children: <Widget>[
+                        Flexible(
+                          flex: 1,
+                            child: Slider(
+                                value: _currentHeadlineCount,
+                                min: 1,
+                                max: 10,
+                                divisions: 9,
+                                activeColor: Colors.green,
+                                onChanged: (double newValue) { setState(() {
+                                  _currentHeadlineCount = newValue;
+                                }); })),
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text("${_currentHeadlineCount.toInt()}"),
+                          ),
+                        )
+                      ],
+                    )
+                  ],
+                ),
                 Center(
                     child: Text('The current reading speed is set to $_readSpeed',
                         style: TextStyle(fontSize: 14.0, color: Colors.white))),
