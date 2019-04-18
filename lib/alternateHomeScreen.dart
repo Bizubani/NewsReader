@@ -27,26 +27,31 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
   final double _bottomLayoutHeight = 0.07;
   final double _mainContentHeight = 0.85;
   final double _topLayoutHeight = 0.08;
-  bool reentry = false;
+  bool _readyForDeletion = false;
   String _loadingMessage = "";
-  int _feedAddressSize = 0; // holds the value of _feedaddress so that when it is changed through addition it allows return to the main screen
+
   List<String> _feedAddresses = [];
   List<WebRSSAccess> _feedData = [];
   List<FeedContent> _data = [];
+  List<String>  _newFeedList = [];
+  List<List<String>> _deletionList = [];
+  List<bool> _markedForDeletion = [];
 
   Future<List<FeedContent>> _getContent(List<WebRSSAccess> feedData) async
   {
-    _feedAddressSize = _feedAddresses.length;
+
     int count = 0;
-    for(var item in feedData){
-        _data.add(await item.makeFeedContent());
+    for(var item in feedData)
+    {
+      FeedContent nextItem = await item.makeFeedContent();
+      _data.add(nextItem);
 
       setState(() {
         _loadingMessage = "Getting your news from " + _data[count++].newSiteTitle;
-
       });
         print("FeedAddresses size = ${_feedAddresses.length} and Data's size = ${_data.length}");
         print(_loadingMessage);
+
     }
     for(var item in _data){
       item.shouldHeadlinesBeRead = await Setting.getReadHeadlines(item.newSiteTitle);
@@ -55,20 +60,49 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
     return _data;
   }
 
+  void _addNewFeeds(List<String> newFeeds) async
+  {
+    List<WebRSSAccess> _newFeedData = [];
+    for(var newFeed in newFeeds)
+      {
+        _newFeedData.add(WebRSSAccess(newFeed));
+      }
+      _feedData.addAll(_newFeedData);
+    _newFeedList = [];
+    _getContent(_newFeedData);
+
+  }
+
 
   void _updateUserFeedList(List<String> updatedList)
   {
     print("FeedAddresses before additon = $_feedAddresses");
+    if(_feedAddresses.isEmpty)
+    {
+      for(String address in updatedList)
+        {
+          _feedAddresses.add(address);
+        }
+        _initialize();
+    }
+    else
+      {
     for (String feed in updatedList)
     {
       if(!_feedAddresses.contains(feed))
       {
-        setState(()
-        {
+          _newFeedList.add(feed);
           _feedAddresses.add(feed);
-        });
+
       }
     }
+      _addNewFeeds(_newFeedList);
+      }
+    setState(() {
+
+    });
+
+    print("Length of feedA = ${_feedAddresses.length} and length of _data = ${_data.length}");
     print("FeedAddresses after work = $_feedAddresses");
     Setting.setUserWebsites(_feedAddresses);
   }
@@ -134,10 +168,18 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
     // if the feed is valid
     if(_myTestFeed.result == 3)
     {
+      if(_feedAddresses.isEmpty)
+      {
+        _feedAddresses.add(_myTestFeed.value);
+        _initialize();
+        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(" ${_myTestFeed.value} added to feed list")));
+      }
       // and the feed has not yet been added
-      if(!_feedAddresses.contains(_myTestFeed.value)){
+      else if(!_feedAddresses.contains(_myTestFeed.value))
+      {
         _feedAddresses.add(_myTestFeed.value); // add the feed and update the shared preferences
-        Setting.setUserWebsites(_feedAddresses);
+        _newFeedList.add(_myTestFeed.value);
+        _addNewFeeds(_newFeedList);
         _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(" ${_myTestFeed.value} added to feed list")));
       }
     }
@@ -150,6 +192,10 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
     {
       print("Null value entered, we encountered exception $e");
     }
+    Setting.setUserWebsites(_feedAddresses);
+    setState(() {
+
+    });
   }
 
   @override
@@ -159,11 +205,91 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
     super.initState();
   }
 
+  Widget _checkDeleteStatus(int index, String title)
+  {
+    List<String> _deletePair = [];
+    try
+    {
+      _deletePair.add(_feedAddresses[index]);
+      print("in _checkDelete try block and _feed[index] = ${_feedAddresses[index]}");
+      _deletePair.add(title);
+    }
+    catch(e){}
+
+    if(_readyForDeletion)
+    {
+        return GestureDetector(
+            child: _markedForDeletion[index] ? Icon(Icons.delete_forever): Icon(Icons.delete_outline),
+          onTap: (){
+            print("pair for deletion is address = ${_deletePair[0]} and title = $title");
+              if(_markedForDeletion[index])
+              {
+                _markedForDeletion[index] = false;
+                _deletionList.removeWhere((item) => item[1] == title);
+              }else
+                {
+                  _markedForDeletion[index] = true;
+                  _deletionList.add(_deletePair);
+              }
+                print(_deletionList);
+              setState(() {
+              });
+          },
+        );
+    }
+  }
+
+  Future<bool> _cancelDeletionState() async
+  {
+   if(_readyForDeletion == true)
+   {
+     print("In will pop scope $_readyForDeletion");
+     setState(() {
+       _readyForDeletion = false;
+     });
+
+     return false;
+   }
+   else
+     return true;
+  }
+
+   _deleteUserSelectedFeeds ()
+  {
+    for(var item in _deletionList)
+    {
+      print("feedAddress before removal = $_feedAddresses");
+      _feedAddresses.remove(item[0]);
+      print("feedAddress after removal = $_feedAddresses");
+      print("data before removal = $_data");
+      _data.removeWhere((feed) => feed.newSiteTitle == item[1]);
+      print("data after removal = $_data");
+    }
+    Setting.setUserWebsites(_feedAddresses);
+    setState(() {
+      _readyForDeletion = false;
+      _markedForDeletion = new List.filled(_feedAddresses.length, false);
+    });
+  }
+
+  Widget _showDeletionConfirmationButton()
+  {
+    if(_readyForDeletion) {
+      return FloatingActionButton.extended(
+        onPressed: _deleteUserSelectedFeeds,
+        label: Text("Delete"),
+      );
+    }
+  }
+
   //use the user's feed list to generate a list view layout
   Widget _createListView(BuildContext context, AsyncSnapshot snap, List<WebRSSAccess> feedData){
     List<FeedContent> data = snap.data;
     return RefreshIndicator(
-      onRefresh: () => Future.delayed(Duration(seconds: 1)),
+      onRefresh: () async
+      {
+        await Future.delayed(Duration(seconds: 1));
+      } ,
       child: new ListView.builder(
           itemCount: data.length,
           itemBuilder: (BuildContext context, int index)
@@ -249,7 +375,10 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
   Widget _createGridView(BuildContext context, AsyncSnapshot snap, List<WebRSSAccess> feedData){
     List<FeedContent> data = snap.data;
     return RefreshIndicator(
-      onRefresh: () => Future.delayed(Duration(seconds: 1)),
+      onRefresh: () async
+      {
+      await Future.delayed(Duration(seconds: 1));
+    } ,
       child: new GridView.builder(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
           itemCount: data.length,
@@ -275,7 +404,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
                           ListTile(
                               title: Text(title, style: TextStyle(color: Colors.white),),
                               subtitle: Text("Click for the news", style: TextStyle(color: Colors.white), ),
-
+                              trailing: _checkDeleteStatus(index, title),
                               // launch detailed news feed listing when a source is selected.
                               onTap:  ()=> Navigator.push(
                                   context, MaterialPageRoute(
@@ -283,7 +412,21 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
                                       NewsArticlesScreen(
                                         listing: feedData[index],
                                         newSite: title,
-                                        shouldItRead: _readHeadlines,)))
+                                        shouldItRead: _readHeadlines,))),
+                            onLongPress: (){
+                                setState(() {
+                                  if(_readyForDeletion)
+                                  {
+                                    print("in truth test = $_readyForDeletion");
+                                    _readyForDeletion = false;
+                                  }
+                                  else
+                                  {
+                                    print("in false test = $_readyForDeletion");
+                                    _readyForDeletion = true;
+                                  }
+                                });
+                            },
                           ),
                          Column(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -346,6 +489,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
           _feedData.add(WebRSSAccess(url));
         }
       }
+      _markedForDeletion = new List.filled(_feedAddresses.length, false);
       _mySettings.gridLayout = await Setting.getLayoutStyle(); // get the settings
       _mySettings.numberOfHeadlines = await Setting.getAmountOfHeadlines();
       _mySettings.readSpeed = await Setting.getReadSpeed();
@@ -429,7 +573,7 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
               future:  _initialize(),
               builder: (BuildContext context, AsyncSnapshot snap)
               {
-                if(snap.hasData && _feedAddressSize <= _data.length )
+                if(snap.hasData && _feedAddresses.length <= _data.length )
                 {
                   if(snap.data.length == 0)
                   {
@@ -510,27 +654,32 @@ class _MyAlternateHomeScreenState extends State<MyAlternateHomeScreen>
                       ),
                       child: Center(
                         child: Text(_loadingMessage, style: TextStyle(fontSize: 14.0),),
-                      ),  
+                      ),
                    )
                   );
                 }
               }),
     );
 
-    return Scaffold(
-      key: _scaffoldKey,
-      body: Container(
-        decoration: BoxDecoration(
-          image: new DecorationImage(
-              image: new AssetImage("assets/mainback.jpg"),
-            fit: BoxFit.cover
+    return WillPopScope(
+      onWillPop: _cancelDeletionState,
+      child: Scaffold(
+        floatingActionButton: _showDeletionConfirmationButton() ,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        key: _scaffoldKey,
+        body: Container(
+          decoration: BoxDecoration(
+            image: new DecorationImage(
+                image: new AssetImage("assets/mainback.jpg"),
+              fit: BoxFit.cover
+            )
+          ),
+          child: new BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+              child: _loadingScreen,
           )
-        ),
-        child: new BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-            child: _loadingScreen,
         )
-      )
+      ),
     );
   }
 }
