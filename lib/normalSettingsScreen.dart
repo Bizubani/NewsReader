@@ -46,22 +46,17 @@ class _NormalSettingsState extends State<NormalSettings>{
           body: Material(
           child: Center(
             child: Container(
-              decoration: BoxDecoration(
-                  image: DecorationImage(
-                      image: AssetImage("assets/settingbackground.jpg"),
-                      fit: BoxFit.cover
-                  )
-              ),
+              color: Colors.white,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>
                 [
-                  Text("Please select preferred layout style"),
+                  Text("Please select preferred layout style", style: TextStyle(color: Colors.black54),),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
                     IconButton(
-                      icon: Icon(Icons.list, color: _currentViewLayout? Colors.green : Colors.white, size: 50.0,),
+                      icon: Icon(Icons.list, color: _currentViewLayout? Colors.green : Colors.black54, size: 50.0,),
                       onPressed: (){
                         print(_currentViewLayout);
                         _currentViewLayout = true;
@@ -69,7 +64,7 @@ class _NormalSettingsState extends State<NormalSettings>{
 
                     ),
                     IconButton(
-                    icon: Icon(Icons.grid_on, color: _currentViewLayout? Colors.white : Colors.green, size: 50.0),
+                    icon: Icon(Icons.grid_on, color: _currentViewLayout? Colors.black54 : Colors.green, size: 50.0),
                         onPressed: () {
                           _currentViewLayout = false;
                           setState(() { });
@@ -81,7 +76,7 @@ class _NormalSettingsState extends State<NormalSettings>{
                   children: <Widget>[
                     Center(
                         child: Text('We currently have ${_currentHeadlineCount.toInt()} stories set to read',
-                            style: TextStyle(fontSize: 14.0, color: Colors.white))),
+                            style: TextStyle(fontSize: 14.0, color: Colors.black54))),
                     Row(
                       children: <Widget>[
                         Flexible(
@@ -107,7 +102,7 @@ class _NormalSettingsState extends State<NormalSettings>{
                 ),
                 Center(
                     child: Text('The current reading speed is set to $_readSpeed',
-                        style: TextStyle(fontSize: 14.0, color: Colors.white))),
+                        style: TextStyle(fontSize: 14.0, color: Colors.black54))),
                 ]),
             ),
           ),

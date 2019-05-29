@@ -108,16 +108,6 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
     myVoiceOver.speak(headline + "..." + description + "...");
   }
 
-  // external library to make link to stories possible.
-  void _launchURL(String url) async{
-    if(await canLaunch(url)){
-      await launch(url);
-    }
-    else{
-      throw 'Could not launch $url';
-    }
-  }
-
   Future<bool> _stopSpeaking() async{
       myVoiceOver.stop();
      if(isSpeaking == true){
@@ -168,7 +158,7 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
             Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(top:32.0),
-                  child: Text(widget.newSite, textAlign: TextAlign.center,),
+                  child: Text(widget.newSite, textAlign: TextAlign.center, style: TextStyle(color: Colors.black87),),
                 )
             )
           ],
@@ -180,9 +170,9 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
 
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
-          _buildBottomLayout( Colors.white,  Icons.list,  'User Menu' ),
-          _buildBottomLayout(Colors.white, Icons.landscape, 'Placeholder'),
-          _buildBottomLayout(Colors.white, Icons.settings, 'Settings')
+          _buildBottomLayout( Colors.black54,  Icons.list,  'User Menu' ),
+          _buildBottomLayout(Colors.black54, Icons.landscape, 'Placeholder'),
+          _buildBottomLayout(Colors.black54, Icons.settings, 'Settings')
 
         ],
       ),
@@ -208,35 +198,37 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
                         var pubDate = snapshot.data[index].pubDate;
                         var author = snapshot.data[index].author;
                        // var pubTime = DateTime.parse(pubDate);
-                        return Column(
-                          children: <Widget>[
-                            ListTile(
-                                title: Text(headline, style: TextStyle(color: Colors.white,fontSize: 18.0)),
-                                subtitle: Text(description, style: TextStyle(color: Colors.white, fontSize: 12.0),),
-                                onLongPress: () => _speak(headline, description),
-                                onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) {
-                                          _stopSpeaking();
-                                         return DetailedScreen(snapshot.data[index]);
+                        return InkWell(
+                            onLongPress: () => _speak(headline, description),
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) {
+                                      _stopSpeaking();
+                                      return DetailedScreen(snapshot.data[index]);
 
-                                        } ) )
+                                    } ) ),
+                          child: Column(
+                            children: <Widget>[
+                              Image(
+                                image: NetworkImage(snapshot.data[index].itemImageURL),
+                              ),
+                              ListTile(
+                                  title: Text(headline, style: TextStyle(color: Colors.black87,fontSize: 18.0)),
+                                  subtitle: Text(description, style: TextStyle(color: Colors.black87, fontSize: 12.0),),
+                              ),
 
-                            ),
-                            Image(
-                              image: NetworkImage(snapshot.data[index].itemImageURL),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
 
-                              children: <Widget>[
-                                Text(pubDate, style: TextStyle(fontSize: 12.0),),
-                                Text(author, style: TextStyle(fontSize: 12.0))
-                              ],
-                            ),
-                            Divider(),
-                          ],
+                                children: <Widget>[
+                                  Text(pubDate, style: TextStyle(fontSize: 12.0),),
+                                  Text(author, style: TextStyle(fontSize: 12.0))
+                                ],
+                              ),
+                              Divider(),
+                            ],
+                          ),
                         );
                       }),
                 ),
@@ -264,11 +256,7 @@ class _NewsArticlesWidgetState extends State<NewsArticlesScreen>{
         body: RefreshIndicator(
           onRefresh: () => Future.delayed(Duration(seconds: 1)), // Todo Implement the refresh command
           child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-              image: AssetImage("assets/background.png"),
-              fit: BoxFit.cover)
-            ),
+           color: Colors.white,
             child: loadingScreen
           ),
         ),

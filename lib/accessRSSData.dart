@@ -1,5 +1,6 @@
 import 'package:webfeed/webfeed.dart';
 import 'package:http/http.dart' as http;
+import 'package:html/parser.dart' as parser;
 import 'feedContent.dart';
 import 'verifyDataIntergity.dart';
 
@@ -56,6 +57,17 @@ class WebRSSAccess {
     }
     else
       return false;
+  }
+
+  String _parseHTML(String testText)
+  {
+    print("Before parsing this is the description: $testText");
+        var myParser =parser.HtmlParser(testText);
+        var parsedDocument = myParser.parse().querySelectorAll('body');
+        testText = parsedDocument[0].text;
+        print("\nAfter parsing this is the description: $testText");
+
+    return testText;
   }
 
   //attempt to find images attached to stories
@@ -119,6 +131,7 @@ class WebRSSAccess {
 
   }
 
+
   TestData dataTester = new TestData();
   String webAddress;
   var client = new http.Client();
@@ -173,7 +186,7 @@ class WebRSSAccess {
     String imageUrl = " ";
     for(var element in data){
       imageUrl = _findImageIfAvailable(element);
-      feedItems.add(new FeedItems(element.title, dataTester.parseGibberish(element.description) , element.link, element.content, imageUrl, element.pubDate == null ? "": element.pubDate, _testAuthorName(element)));
+      feedItems.add(new FeedItems(_parseHTML(element.title), _parseHTML(element.description), element.link, element.content, imageUrl, element.pubDate == null ? "": element.pubDate, _testAuthorName(element)));
     }
     return feedItems;
   }
